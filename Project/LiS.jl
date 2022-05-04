@@ -24,7 +24,8 @@ end
 
 function solveConstHelmNLA(hop,n,b,m::ComplexF64)
 # h = [-1 2 -1]/(h^2) - [0 m 0];
-pad = trunc(Int, n/2); #n ; #div(n,2);
+# pad = trunc(Int, n/2); #n ; #div(n,2);
+pad = 0;
 bext = zeros(ComplexF64,n+2*pad);
 bext[(pad+1):(pad+n)].= b;
 gamma = zeros(n);
@@ -42,9 +43,9 @@ end
 
 
 
-n = 400;
-# pad = 20;
-# n = n+2*pad
+n = 380;
+pad = 20;
+n = n+2*pad
 h = 4.0/n;
 m = (0.015/(h^2))*(1.0 + 1im*0.00)
 
