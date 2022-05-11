@@ -29,7 +29,7 @@ pad = n # trunc(Int, n/16);
 bext = zeros(ComplexF64,n+2*pad);
 bext[(pad+1):(pad+n)].= b;
 
-n_w_pad = n + 2*pad;
+n_w_pad = n + 2*pad;            # n with padding.
 
 gamma = zeros(n_w_pad);
 
@@ -49,27 +49,20 @@ u_internal = u[(pad+1):(pad+n)];
 return u_internal;
 end
 
-
-
-
 n = 400;
 # pad = 20;
 # n = n+2*pad
 h = 4.0/n;
-m = (0.015/(h^2))*(1.0 + 1im*0.50)
+m = (0.015/(h^2))*(1.0 + 1im*0.50)          # m = k^2. In this case it is constant through space (x).
 
 # m is more or less k^2
 hop = [-1 2 -1]/(h^2) - [0 m 0];
-
-
 
 # b is f(x)
 b = zeros(ComplexF64,n);
 b[div(n,2)] = 1.0;
 
-
 u2 = solveConstHelmNLA(hop,n,b,m::ComplexF64)
-
 
 # println(norm(u2-u))
 figure()
