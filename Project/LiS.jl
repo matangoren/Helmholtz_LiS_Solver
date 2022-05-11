@@ -75,7 +75,6 @@ u2 = solveConstHelmNLA(hop,n,b,m::ComplexF64)
 figure()
 plot(real(u2))
 # savefig("no_padding_w_gamma_constNLA.png")
-show()
 error()
 
 # error()
