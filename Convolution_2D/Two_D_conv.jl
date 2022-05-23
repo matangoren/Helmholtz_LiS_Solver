@@ -44,10 +44,9 @@ function padding_conv(input, filter, padding="valid")
 end
 
 
-img_path = "D:\\University\\CS Project\\Convolution_2D\\IMG_1452.JPG"
+img_path = "D:\\University\\CS Project\\Helmholtz_Solver\\Convolution_2D\\IMG_1452.JPG"
 img = load(img_path)
 channels = channelview(img)
-channels
 
 r = channels[1,:,:]
 g = channels[2,:,:]
@@ -69,3 +68,28 @@ squar_r = sqrt.(g_x_r .* g_x_r + g_y_r .* g_y_r)
 squar_g = sqrt.(g_x_g .* g_x_g + g_y_g .* g_y_g)
 squar_b = sqrt.(g_x_b .* g_x_b + g_y_b .* g_y_b)
 recombine_tot = colorview(RGB, squar_r, squar_g, squar_b)
+
+
+function fft_conv(img, kernel)
+    hop = zeros(ComplexF64,size(img)[1],size(img)[2]);
+    hop[1:3,1:3] = kernel
+    hath = fft(hop);
+    hatimg = fft(img);
+    hatu = hath .* hatimg;
+    u = ifft(hatu);
+    return u;
+    end
+
+g_x_r_fft = fft_conv(r, grad_x)
+g_x_g_fft = fft_conv(g, grad_x)
+g_x_b_fft = fft_conv(b, grad_x)
+g_y_r_fft = fft_conv(r, grad_y)
+g_y_g_fft = fft_conv(g, grad_y)
+g_y_b_fft = fft_conv(b, grad_y)
+
+recombine_x = colorview(RGB, abs.(g_x_r_fft), abs.(g_x_g_fft),  abs.(g_x_b_fft))
+recombine_y = colorview(RGB, abs.(g_y_r_fft), abs.(g_y_g_fft),  abs.(g_y_b_fft))
+squar_r_fft = sqrt.(g_x_r_fft .* conj.(g_x_r_fft) + g_y_r_fft .* conj.(g_y_r_fft))
+squar_g_fft = sqrt.(g_x_g_fft .* conj.(g_x_g_fft) + g_y_g_fft .* conj.(g_y_g_fft))
+squar_b_fft = sqrt.(g_x_b_fft .* conj.(g_x_b_fft) + g_y_b_fft .* conj.(g_y_b_fft))
+recombine_tot = colorview(RGB, abs.(squar_r_fft), abs.(squar_g_fft), abs.(squar_b_fft))
