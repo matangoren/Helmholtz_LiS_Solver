@@ -44,7 +44,7 @@ function padding_conv(input, filter, padding="valid")
 end
 
 
-img_path = "D:\\University\\CS Project\\Convolution_2D\\IMG_1452.JPG"
+img_path = "C:/Users/razmo/Pictures/2018-07/DSC_0027.JPG"
 img = load(img_path)
 channels = channelview(img)
 channels
