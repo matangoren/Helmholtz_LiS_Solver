@@ -55,11 +55,11 @@ gamma[1]   = -10 * sqrt(real(m))*(1.0/h);             # Sommerfeld radiation con
 gamma[end] = -10 * sqrt(real(m))*(1.0/h);
 
 # H = spdiagm(-1=>hop[1]*ones(n-1), 0=>hop[2]*ones(n), 1=>hop[3]*ones(n-1));
-H = spdiagm(-1=>hop[1]*ones(n_w_pad-1), 0=>hop[2]*ones(n_w_pad), 1=>hop[3]*ones(n_w_pad-1));
+H = spdiagm(-1=>hop[1]*ones(n_w_pad-1), 0=>hop[2]*ones(n_w_pad), 1=>hop[3]*ones(n_w_pad-1));        # Like lap1D. 
 
 H = H + spdiagm(0=>1im*gamma);
 
-# H[1,end] = hop[1];
+# H[1,end] = hop[1];            # Periodic BC.
 # H[end,1] = hop[3];
 # u = H\b;
 u = H\bext;
@@ -76,9 +76,12 @@ m = (0.1/(h^2))*(1.0 + 1im*0.01)          # m = k^2. In this case it is constant
 # m is more or less k^2
 hop = [-1 2 -1]/(h^2) - [0 m 0];
 
+# In 2D: Lap2D - m*Id. This is after we add lines (62, 63) to each of the 1D Laplacians.
+
 # b is f(x)
 b = zeros(ComplexF64,n);
 b[div(n,2)] = 1.0;
+# In 2D: 1 in the middle of the matrix.
 
 u2 = solveConstHelmNLA(hop,n,b,m::ComplexF64)
 

@@ -96,4 +96,7 @@ recombine_y = colorview(RGB, abs.(g_y_r_fft), abs.(g_y_g_fft),  abs.(g_y_b_fft))
 squar_r_fft = sqrt.(g_x_r_fft .* conj.(g_x_r_fft) + g_y_r_fft .* conj.(g_y_r_fft))
 squar_g_fft = sqrt.(g_x_g_fft .* conj.(g_x_g_fft) + g_y_g_fft .* conj.(g_y_g_fft))
 squar_b_fft = sqrt.(g_x_b_fft .* conj.(g_x_b_fft) + g_y_b_fft .* conj.(g_y_b_fft))
-recombine_tot = colorview(RGB, abs.(squar_r_fft), abs.(squar_g_fft), abs.(squar_b_fft))
+recombine_tot = colorview(RGB, abs.(squar_r_fft), abs.(squar_g_fft), abs.(squar_b_fft)) # No need for abs.
+
+
+
