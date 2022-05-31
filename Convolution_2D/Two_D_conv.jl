@@ -75,13 +75,27 @@ recombine_tot = colorview(RGB, squar_r, squar_g, squar_b)
 
 function fft_conv(img, kernel)
     hop = zeros(ComplexF64,size(img)[1],size(img)[2]);
-    hop[1:3,1:3] = kernel
+    hop[1:2,1:2] = kernel[2:3,2:3]
+    hop[end,1:2] = kernel[1,2:3]
+    hop[1:2,end] = kernel[2:3,1]
+    hop[end,end] = kernel[1,1]
     hath = fft(hop);
     hatimg = fft(img);
     hatu = hath .* hatimg;
     u = ifft(hatu);
     return u;
 end
+
+# Old implementation of the above function.
+# function fft_conv(img, kernel)
+#     hop = zeros(ComplexF64,size(img)[1],size(img)[2]);
+#     hop[1:3,1:3] = kernel
+#     hath = fft(hop);
+#     hatimg = fft(img);
+#     hatu = hath .* hatimg;
+#     u = ifft(hatu);
+#     return u;
+# end
 
 g_x_r_fft = fft_conv(r, grad_x)
 g_x_g_fft = fft_conv(g, grad_x)
