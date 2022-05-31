@@ -77,7 +77,7 @@ m = (0.1/(h^2))*(1.0 + 1im*0.01)          # m = k^2. In this case it is constant
 hop = [-1 2 -1]/(h^2) - [0 m 0];
 
 # b is f(x)
-b = zeros(ComplexF64,n);
+b = zeros(ComplexF64,n, n);
 b[div(n,2)] = 1.0;
 
 u2 = solveConstHelmNLA(hop,n,b,m::ComplexF64)
