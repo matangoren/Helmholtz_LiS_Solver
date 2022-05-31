@@ -4,7 +4,6 @@ using FFTW
 using SparseArrays
 using LinearAlgebra
 using Images, FileIO
-close("all");
 
 
 function padding_conv(input, filter, padding="valid")
@@ -44,7 +43,11 @@ function padding_conv(input, filter, padding="valid")
 end
 
 
-img_path = "D:\\University\\CS Project\\Helmholtz_Solver\\Convolution_2D\\IMG_1452.JPG"
+
+img_path = "C:/Users/razmo/Pictures/2018-07/DSC_0027.JPG"
+
+# img_path = "D:\\University\\CS Project\\Helmholtz_Solver\\Convolution_2D\\IMG_1452.JPG"
+
 img = load(img_path)
 channels = channelview(img)
 
@@ -81,7 +84,18 @@ function fft_conv(img, kernel)
     hatu = hath .* hatimg;
     u = ifft(hatu);
     return u;
-    end
+end
+
+# Old implementation of the above function.
+# function fft_conv(img, kernel)
+#     hop = zeros(ComplexF64,size(img)[1],size(img)[2]);
+#     hop[1:3,1:3] = kernel
+#     hath = fft(hop);
+#     hatimg = fft(img);
+#     hatu = hath .* hatimg;
+#     u = ifft(hatu);
+#     return u;
+# end
 
 g_x_r_fft = fft_conv(r, grad_x)
 g_x_g_fft = fft_conv(g, grad_x)
