@@ -16,7 +16,7 @@ function fft_conv(kernel,n,b,m::ComplexF64)
     hatu = hatb ./ hath;
     u = ifft(hatu);
     return u;
-    end
+end
 
 function matrix_conv(n, h, b)
     In = (n::Int64)->(return spdiagm(0=>ones(n)));
@@ -25,7 +25,8 @@ function matrix_conv(n, h, b)
         (return spdiagm(0=>(-2/h^2)*ones(n),1=>(1/h^2)*ones(n-1),-1=>(1/h^2)*ones(n-1)));
 
     Lap2D = kron(In(n), Lap1D(h,n)) + kron(Lap1D(h,n), In(n));
-    return reshape((Lap2D\reshape(b, (n*n, 1))),(n,n))
+    b = reshape(b, (n*n, 1))
+    return reshape((Lap2D\b),(n,n))
 end 
 
 
