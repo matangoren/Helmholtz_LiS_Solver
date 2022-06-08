@@ -1,9 +1,10 @@
-using Plots
 using PyPlot
+using Plots
 using FFTW
 using SparseArrays
 using LinearAlgebra
 using Images, FileIO
+close("all");
 
 function fft_conv(kernel,n,b,m::ComplexF64)
     hop = zeros(ComplexF64,size(b)[1],size(b)[2]);
@@ -18,7 +19,7 @@ function fft_conv(kernel,n,b,m::ComplexF64)
     return u;
     end
 
-function matrix_conv(n, h, b)
+function matrix_conv(n, h, b, m)
     In = (n::Int64)->(return spdiagm(0=>ones(n)));
 
     Lap1D = (h::Float64,n::Int64) -> 
@@ -26,7 +27,7 @@ function matrix_conv(n, h, b)
 
     Lap2D = kron(In(n), Lap1D(h,n)) + kron(Lap1D(h,n), In(n));
     return reshape((Lap2D\reshape(b, (n*n, 1))),(n,n))
-end 
+    end 
 
 
 
@@ -34,10 +35,10 @@ n = 200;
 # pad = 20;
 # n = n+2*pad
 h = 2.0/n;
-m = (0.1/(h^2))*(1.0 + 1im*0.00)          # m = k^2. In this case it is constant through space (x).
+m = (0.1/(h^2))*(1.0 + 1im*0.20)          # m = k^2. In this case it is constant through space (x).
 
 kernel = zeros(ComplexF64, 3, 3);
-kernel += [[0 -1 0];[-1 2 -1];[0 -1 0]] / h^2 - [[0 0 0];[0 m 0];[0 0 0]];
+kernel += [[0 -1 0];[-1 2 -1];[0 -1 0]] / h^2 - [[m 0 0];[0 m 0];[0 0 m]];
 # m is more or less k^2
 b = zeros(ComplexF64,n, n);
 b[div(n,2), div(n,2)] = 1.0;
@@ -46,12 +47,12 @@ temp = fft_conv(kernel,n,b,m::ComplexF64);
 heatmap(abs.(temp))
 
 mat = matrix_conv(n,h,b);
-heatmap(abs.(mat))
+heatmap(real.(mat))
 
-
-
-mat - temp
-
+one_d = temp[div(n,2),:]
+figure()
+plot(real.(one_d))
+plot(real.(mat[div(n,2),:]))
 
 # img_path = "Helmholtz_Solver\\Convolution_2D\\logo_bgu_png.png"
 # img = load(img_path)
