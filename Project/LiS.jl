@@ -23,22 +23,22 @@ function solveConstHelm_temp(hop,n,b,m::ComplexF64)
     end
 
 function solveConstHelm(hop,n,b,m::ComplexF64)
-# h = [-1 2 -1]/(h^2) - [0 m 0];
-pad = Int(n/2); #n ; #div(n,2);
-bext = zeros(ComplexF64,n+2*pad);
-bext[1:n] .= b;
-# bext[(pad+1):(pad+n)].= b;
-hvec = zeros(ComplexF64, n+2*pad);
-hvec[1] = hop[2];
-hvec[2] = hop[3];
-hvec[n+2*pad] = hop[1];
-hath = fft(hvec);
-hatb = fft(bext);
-hatu = hatb./hath;
-uext = ifft(hatu);
-#u = uext[(pad+1):(pad+n)];
-u = uext[1:n];
-return u;
+    # h = [-1 2 -1]/(h^2) - [0 m 0];
+    pad = Int(n/2); #n ; #div(n,2);
+    bext = zeros(ComplexF64,n+2*pad);
+    bext[1:n] .= b;
+    # bext[(pad+1):(pad+n)].= b;
+    hvec = zeros(ComplexF64, n+2*pad);
+    hvec[1] = hop[2];
+    hvec[2] = hop[3];
+    hvec[n+2*pad] = hop[1];
+    hath = fft(hvec);
+    hatb = fft(bext);
+    hatu = hatb./hath;
+    uext = ifft(hatu);
+    #u = uext[(pad+1):(pad+n)];
+    u = uext[1:n];
+    return u;
 end
 
 function solveConstHelmNLA(hop,n,b,m::ComplexF64)

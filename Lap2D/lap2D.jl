@@ -5,7 +5,7 @@ using SparseArrays
 using LinearAlgebra
 using Images, FileIO
 
-function fft_conv(kernel,n,b,m::ComplexF64)
+function fft_conv(kernel, n, b, m::ComplexF64)
     hop = zeros(ComplexF64,size(b)[1],size(b)[2]);
     hop[1:2,1:2] = kernel[2:3,2:3]
     hop[end,1:2] = kernel[1,2:3]
@@ -16,18 +16,23 @@ function fft_conv(kernel,n,b,m::ComplexF64)
     hatu = hatb ./ hath;
     u = ifft(hatu);
     return u;
-    end
+end
+
+In = (n::Int64)->(return spdiagm(0=>ones(n)));
 
 function matrix_conv(n, h, b, m)
-    In = (n::Int64)->(return spdiagm(0=>ones(n)));
-
     Lap1D = (h::Float64,n::Int64) -> 
-        (return spdiagm(0=>(-2/h^2)*ones(n),1=>(1/h^2)*ones(n-1),-1=>(1/h^2)*ones(n-1)));
-
-    Lap2D = kron(In(n), Lap1D(h,n)) + kron(Lap1D(h,n), In(n));
-    return reshape((Lap2D\reshape(b, (n*n, 1))),(n,n))
-    end 
-
+        (A = spdiagm(0=>(2/h^2)*ones(n),1=>(-1/h^2)*ones(n-1),-1=>(-1/h^2)*ones(n-1));
+        # A[1,end] = -1/h^2;            # Periodic BC.
+        # A[end,1] = -1/h^2;
+        A[1,1]=1/h^2;
+        A[n,n]=1/h^2;                   # See notes to understand why this is here.
+        return A;
+        );
+    Lap2D = kron(In(n), Lap1D(h,n)) + kron(Lap1D(h,n), In(n)) - m .* spdiagm(0=>ones(n*n));
+    b = reshape(b, (n*n, 1))
+    return reshape((Lap2D\b),(n,n))
+end 
 
 
 n = 200;
@@ -37,21 +42,40 @@ h = 2.0/n;
 m = (0.1/(h^2))*(1.0 + 1im*0.20)          # m = k^2. In this case it is constant through space (x).
 
 kernel = zeros(ComplexF64, 3, 3);
-kernel += [[0 -1 0];[-1 2 -1];[0 -1 0]] / h^2 - [[m 0 0];[0 m 0];[0 0 m]];
+kernel += [[0 -1 0];[-1 4 -1];[0 -1 0]] / h^2 - m .* [[0 0 0];[0 1 0];[0 0 0]];
 # m is more or less k^2
-b = zeros(ComplexF64,n, n);
+b = zeros(ComplexF64, n, n);
 b[div(n,2), div(n,2)] = 1.0;
 
-temp = fft_conv(kernel,n,b,m::ComplexF64);
-heatmap(abs.(temp))
+temp = fft_conv(kernel, n, b, m);
+heatmap(real.(temp))
 
-mat = matrix_conv(n,h,b);
+mat = matrix_conv(n, h, b, m);
 heatmap(real.(mat))
 
-one_d = temp[div(n,2),:]
-figure()
-plot(real.(one_d))
-plot(real.(mat[div(n,2),:]))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# one_d = temp[div(n,2),:]
+# figure()
+# plot(real.(one_d))
+# plot(real.(mat[div(n,2),:]))
 
 # img_path = "Helmholtz_Solver\\Convolution_2D\\logo_bgu_png.png"
 # img = load(img_path)
