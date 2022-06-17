@@ -39,7 +39,7 @@ n = 200;
 # pad = 20;
 # n = n+2*pad
 h = 2.0/n;
-m = (0.1/(h^2))*(1.0 + 1im*0.20)          # m = k^2. In this case it is constant through space (x).
+m = (0.1/(h^2))*(1.0 + 1im*0.00)          # m = k^2. In this case it is constant through space (x).
 
 kernel = zeros(ComplexF64, 3, 3);
 kernel += [[0 -1 0];[-1 4 -1];[0 -1 0]] / h^2 - m .* [[0 0 0];[0 1 0];[0 0 0]];
@@ -52,34 +52,3 @@ heatmap(real.(temp))
 
 mat = matrix_conv(n, h, b, m);
 heatmap(real.(mat))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# one_d = temp[div(n,2),:]
-# figure()
-# plot(real.(one_d))
-# plot(real.(mat[div(n,2),:]))
-
-# img_path = "Helmholtz_Solver\\Convolution_2D\\logo_bgu_png.png"
-# img = load(img_path)
-# gray_image = Gray.(img)
-# 
-# g_x_r = padding_conv(gray_image, [[1,0,-1] [2,0,-2] [1,0,-1]], "same")
-# heatmap(g_x_r, color = :greys)
