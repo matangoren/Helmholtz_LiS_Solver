@@ -25,11 +25,21 @@ function matrix_conv(n, h, b, m)
         (A = spdiagm(0=>(2/h^2)*ones(n),1=>(-1/h^2)*ones(n-1),-1=>(-1/h^2)*ones(n-1));
         # A[1,end] = -1/h^2;            # Periodic BC.
         # A[end,1] = -1/h^2;
-        A[1,1]=1/h^2;
-        A[n,n]=1/h^2;                   # See notes to understand why this is here.
+        A[1,1]=1/h^2;                   # Neuman BC. See NumericalPDEs to understand why.
+        A[n,n]=1/h^2;
         return A;
         );
-    Lap2D = kron(In(n), Lap1D(h,n)) + kron(Lap1D(h,n), In(n)) - m .* spdiagm(0=>ones(n*n));
+    
+    fact = 10 * sqrt(real(m)) * (1.0/h);
+    Sommerfeld = spdiagm(0=>zeros(n*n))
+    Sommerfeld[1, :] .= fact
+    Sommerfeld[:, 1] .= fact
+    Sommerfeld[end, :] .= fact
+    Sommerfeld[:, end] .= fact
+    Sommerfeld = 1im .* Sommerfeld
+
+    Lap2D = kron(In(n), Lap1D(h,n)) + kron(Lap1D(h,n), In(n)) - m .* spdiagm(0=>ones(n*n)) - Sommerfeld;
+    print(Lap2D[1, 1])
     b = reshape(b, (n*n, 1))
     return reshape((Lap2D\b),(n,n))
 end 
@@ -39,7 +49,7 @@ n = 200;
 # pad = 20;
 # n = n+2*pad
 h = 2.0/n;
-m = (0.2/(h^2))*(1.0 + 1im*0.15)          # m = k^2. In this case it is constant through space (x).
+m = (0.1/(h^2))*(1.0 + 1im*0.00)          # m = k^2. In this case it is constant through space (x).
 
 kernel = zeros(ComplexF64, 3, 3);
 kernel += [[0 -1 0];[-1 4 -1];[0 -1 0]] / h^2 - m .* [[0 0 0];[0 1 0];[0 0 0]];
@@ -47,39 +57,10 @@ kernel += [[0 -1 0];[-1 4 -1];[0 -1 0]] / h^2 - m .* [[0 0 0];[0 1 0];[0 0 0]];
 b = zeros(ComplexF64, n, n);
 b[div(n,2), div(n,2)] = 1.0;
 
-temp = fft_conv(kernel, n, b, m);
-heatmap(real.(temp))
+# temp = fft_conv(kernel, n, b, m);
+# heatmap(real.(temp))
 
 mat = matrix_conv(n, h, b, m);
 heatmap(real.(mat))
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# one_d = temp[div(n,2),:]
-# figure()
-# plot(real.(one_d))
-# plot(real.(mat[div(n,2),:]))
-
-# img_path = "Helmholtz_Solver\\Convolution_2D\\logo_bgu_png.png"
-# img = load(img_path)
-# gray_image = Gray.(img)
-# 
-# g_x_r = padding_conv(gray_image, [[1,0,-1] [2,0,-2] [1,0,-1]], "same")
-# heatmap(g_x_r, color = :greys)
+heatmap(imag.(mat))
+heatmap(abs.(mat))

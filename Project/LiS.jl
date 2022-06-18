@@ -79,7 +79,7 @@ hop = [-1 2 -1]/(h^2) - [0 m 0];
 # In 2D: Lap2D - m*Id. This is after we add lines (62, 63) to each of the 1D Laplacians.
 
 # b is f(x)
-b = zeros(ComplexF64,n);
+b = zeros(ComplexF64, n, n);
 b[div(n,2)] = 1.0;
 # In 2D: 1 in the middle of the matrix.
 
