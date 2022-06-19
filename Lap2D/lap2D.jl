@@ -22,7 +22,7 @@ In = (n::Int64)->(return spdiagm(0=>ones(n)));
 
 function matrix_conv(n, h, b, m)
     Lap1D = (h::Float64,n::Int64) -> 
-        (A = spdiagm(0=>(2/h^2)*ones(n),1=>(-1/h^2)*ones(n-1),-1=>(-1/h^2)*ones(n-1));
+        (A = spdiagm(0=>(2/h^2)*ones(n),1=>(-1/h^2)*ones(n-1),-1=>(-1/h^2)*ones(n-1)) - Sommerfeld;
         # A[1,end] = -1/h^2;            # Periodic BC.
         # A[end,1] = -1/h^2;
         A[1,1]=1/h^2;                   # Neuman BC. See NumericalPDEs to understand why.
@@ -31,14 +31,14 @@ function matrix_conv(n, h, b, m)
         );
     
     fact = 10 * sqrt(real(m)) * (1.0/h);
-    Sommerfeld = spdiagm(0=>zeros(n*n))
+    Sommerfeld = spdiagm(0=>zeros(n))
     Sommerfeld[1, :] .= fact
     Sommerfeld[:, 1] .= fact
     Sommerfeld[end, :] .= fact
     Sommerfeld[:, end] .= fact
     Sommerfeld = 1im .* Sommerfeld
 
-    Lap2D = kron(In(n), Lap1D(h,n)) + kron(Lap1D(h,n), In(n)) - m .* spdiagm(0=>ones(n*n)) - Sommerfeld;
+    Lap2D = kron(In(n), Lap1D(h,n)) + kron(Lap1D(h,n), In(n)) - m .* spdiagm(0=>ones(n*n)); # - Sommerfeld;
     print(Lap2D[1, 1])
     b = reshape(b, (n*n, 1))
     return reshape((Lap2D\b),(n,n))
