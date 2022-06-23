@@ -57,10 +57,10 @@ kernel += [[0 -1 0];[-1 4 -1];[0 -1 0]] / h^2 - m .* [[0 0 0];[0 1 0];[0 0 0]];
 b = zeros(ComplexF64, n, n);
 b[div(n,2), div(n,2)] = 1.0;
 
-# temp = fft_conv(kernel, n, b, m);
-# heatmap(real.(temp))
+temp = fft_conv(kernel, n, b, m);
+heatmap(real.(temp))
 
 mat = matrix_conv(n, h, b, m);
 heatmap(real.(mat))
-heatmap(imag.(mat))
-heatmap(abs.(mat))
+# heatmap(imag.(mat))
+# heatmap(abs.(mat))
