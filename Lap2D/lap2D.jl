@@ -6,6 +6,21 @@ using LinearAlgebra
 using Images, FileIO
 
 function fft_conv(kernel, n, b, m::ComplexF64)
+    # hop = zeros(ComplexF64,size(b)[1],size(b)[2]);
+    hop = zeros(ComplexF64,n,n);
+    hath = zeros(ComplexF64,size(b)[1],size(b)[2]);
+    hop[1:2,1:2] = kernel[2:3,2:3]
+    hop[end,1:2] = kernel[1,2:3]
+    hop[1:2,end] = kernel[2:3,1]
+    hop[end,end] = kernel[1,1]
+    hath[1:n,1:n] = fft(hop);
+    hatb = fft(b);
+    hatu = hatb ./ hath;
+    u = ifft(hatu);
+    return u;
+end
+
+function fft_conv_2(kernel, n, b, m::ComplexF64)
     hop = zeros(ComplexF64,size(b)[1],size(b)[2]);
     hop[1:2,1:2] = kernel[2:3,2:3]
     hop[end,1:2] = kernel[1,2:3]
@@ -13,6 +28,21 @@ function fft_conv(kernel, n, b, m::ComplexF64)
     hop[end,end] = kernel[1,1]
     hath = fft(hop);
     hatb = fft(b);
+    hatu = hatb ./ hath;
+    u = ifft(hatu);
+    return u;
+end
+
+function fft_conv_3(kernel, n, pad, b, m::ComplexF64)
+    hop = zeros(ComplexF64,n+2pad,n+2pad);
+    hop[1:2,1:2] = kernel[2:3,2:3]
+    hop[end,1:2] = kernel[1,2:3]
+    hop[1:2,end] = kernel[2:3,1]
+    hop[end,end] = kernel[1,1]
+    hath = fft(hop);
+    b_new = zeros(ComplexF64,n+2pad,n+2pad)
+    b_new[n+1:2n,n+1:2n] .= b
+    hatb = fft(b_new);
     hatu = hatb ./ hath;
     u = ifft(hatu);
     return u;
@@ -66,7 +96,7 @@ n = 200;
 pad = n;
 # n = n+pad;
 h = 2.0/n;
-m = (0.1/(h^2))*(1.0 + 1im*0.00)          # m = k^2. In this case it is constant through space (x).
+m = (0.1/(h^2))*(1.0 + 1im*0.02)          # m = k^2. In this case it is constant through space (x).
 
 kernel = zeros(ComplexF64, 3, 3);
 kernel += [[0 -1 0];[-1 4 -1];[0 -1 0]] / h^2 - m .* [[0 0 0];[0 1 0];[0 0 0]];
@@ -76,12 +106,15 @@ b[div(n,2), div(n,2)] = 1.0;
 b_pad  = zeros(n+pad,n+pad)
 b_pad[1:n,1:n] .= b
 
-temp = fft_conv(kernel, n+pad, b_pad, m);
+# temp = fft_conv(kernel, n, b_pad, m);
+# heatmap(real.(temp))
+
+temp = fft_conv_3(kernel, n, pad, b, m);
 heatmap(real.(temp))
+hinv = temp[n/2+1:3n/2,n/2+1:3n/2]
 
 # mat = matrix_conv_without(n, h, b, m);
 mat = matrix_conv(n, h, b, m);
 heatmap(real.(mat))
 # heatmap(imag.(mat))
 # heatmap(abs.(mat))
-
