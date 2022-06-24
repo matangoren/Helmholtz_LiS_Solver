@@ -1,5 +1,5 @@
-
 using PyPlot
+using Plots
 using FFTW
 using SparseArrays
 using LinearAlgebra
