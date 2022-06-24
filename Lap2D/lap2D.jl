@@ -61,7 +61,6 @@ function matrix_conv(n, h, b, m)
         A[n,n] -= 1im * sqrt(real(m)) * (1.0/h);
         return A;
         );
-    
     # fact = 1 * sqrt(real(m)) * (1.0/h);
     # Sommerfeld = zeros(n, n)
     # Sommerfeld[1, :] .= fact
@@ -75,6 +74,7 @@ function matrix_conv(n, h, b, m)
     b = reshape(b, (n*n, 1))
     return reshape((Lap2D\b),(n,n))
 end 
+
 
 function matrix_conv_without(n, h, b, m)
     Lap1D = (h::Float64,n::Int64) -> 
@@ -106,13 +106,13 @@ b[div(n,2), div(n,2)] = 1.0;
 b_pad  = zeros(n+pad,n+pad)
 b_pad[1:n,1:n] .= b
 
-# temp = fft_conv(kernel, n, b_pad, m);
-# heatmap(real.(temp))
+temp = fft_conv(kernel, n, b, m);
+heatmap(real.(temp))
 
 temp = fft_conv_3(kernel, n, pad, b, m);
 heatmap(real.(temp))
 hinv = temp[n/2+1:3n/2,n/2+1:3n/2]
-
+heatmap(real.(hinv))
 # mat = matrix_conv_without(n, h, b, m);
 mat = matrix_conv(n, h, b, m);
 heatmap(real.(mat))
