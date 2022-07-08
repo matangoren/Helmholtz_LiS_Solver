@@ -69,7 +69,7 @@ In = (n::Int64)->(return spdiagm(0=>ones(ComplexF64, n)));
     # Sommerfeld[end, :] .= fact
     # Sommerfeld[:, end] .= fact
     # Sommerfeld = 1im .* Sommerfeld
-    # Sommerfeld = spdiagm(0=>Sommerfeld[:])afafasfdsa
+    # Sommerfeld = spdiagm(0=>Sommerfeld[:])
     
     Lap2D = kron(In(n), Lap1D(h,n)) + kron(Lap1D(h,n), In(n)) - m .* spdiagm(0=>ones(ComplexF64, n*n)); #- Sommerfeld;
     b = reshape(b, (n*n, 1))
