@@ -53,14 +53,15 @@ In = (n::Int64)->(return spdiagm(0=>ones(ComplexF64, n)));
   function matrix_conv(n, h, b, m)
     Lap1D = (h::Float64,n::Int64) -> 
         (A = spdiagm(0=>(2/h^2)*ones(ComplexF64, n),1=>(-1/h^2)*ones(ComplexF64, n-1),-1=>(-1/h^2)*ones(ComplexF64, n-1)); #- Sommerfeld;
-        # A[1,end] = -1/h^2;            # Periodic BC.
+        # A[1,end] = -1/h^2;                                # Periodic BC.
         # A[end,1] = -1/h^2;
-        A[1,1]=1/h^2;                   # Neuman BC. See NumericalPDEs to understand why.
-        A[1,1] -= 1im * sqrt(real(m)) * (1.0/h);
+        A[1,1]=1/h^2;                                       # Neuman BC. See NumericalPDEs to understand why.
+        A[1,1] -= 1im * sqrt(real(m)) * (1.0/h);            # Sommerfeld
         A[n,n]=1/h^2;
-        A[n,n] -= 1im * sqrt(real(m)) * (1.0/h);
+        A[n,n] -= 1im * sqrt(real(m)) * (1.0/h);            # Sommerfeld
         return A;
         );
+
     # fact = 1 * sqrt(real(m)) * (1.0/h);
     # Sommerfeld = zeros(n, n)
     # Sommerfeld[1, :] .= fact
@@ -87,36 +88,65 @@ function matrix_conv_without(n, h, b, m)
         );
 
     Lap2D = kron(In(n), Lap1D(h,n)) + kron(Lap1D(h,n), In(n)) - m .* spdiagm(0=>ones(n*n));
-    print(Lap2D[1, 1])
+    # print(Lap2D[1, 1])
     b = reshape(b, (n*n, 1))
     return reshape((Lap2D\b),(n,n))
 end 
 
 n = 200;
 pad = n;
-# n_pad = n+pad;
+n_pad = n+pad;
 h = 2.0/n;
-m = (0.1/(h^2))*(1.0 + 1im*0.2)          # m = k^2. In this case it is constant through space (x).
-
+m = (0.1/(h^2))*(1.0 + 1im*0.02)         # m = k^2. In this case it is constant through space (x).
+                                        # m is more or less k^2
 kernel = zeros(ComplexF64, 3, 3);
 kernel += [[0 -1 0];[-1 4 -1];[0 -1 0]] / h^2 - m .* [[0 0 0];[0 1 0];[0 0 0]];
-# m is more or less k^2
 b = zeros(ComplexF64, n, n);
 b[div(n,2), div(n,2)] = 1.0;
-b_pad  = zeros(n+pad,n+pad)
-b_pad[1:n,1:n] .= b
+# b_pad = zeros(n+pad,n+pad)
+# b_pad[1:n,1:n] .= b
 
-temp = fft_conv(kernel, n, b, m);
-heatmap(real.(temp))
-
+# Generate G (Green's function for a single source in the middle of the grid).
 temp = fft_conv_3(kernel, n, pad, b, m);
 heatmap(real.(temp))
-# hinv = temp[n/2+1:3n/2,n/2+1:3n/2]
+g = temp[Int(n/2+1):Int(5n/2),Int(n/2+1):Int(5n/2)]
+heatmap(real.(g))
 
-hinv = temp[201:400,201:400]
-heatmap(real.(hinv))
+q = zeros(ComplexF64, n, n);
+q[div(n,2), div(n,2)] = 1.0;
+q_pad = zeros(2n,2n)
+q_pad[Int(n/2)+1:Int(3n/2),Int(n/2)+1:Int(3n/2)] .= q
+
+sol = ifft(fft(g) .* fft(q_pad))
+sol = sol[Int(n/2)+1:Int(3n/2),Int(n/2)+1:Int(3n/2)]
+heatmap(real.(sol))
+
+
+
+
+# Sanity check: L*u needs to return q approximately
+Lap1D = (h::Float64,n::Int64) -> 
+        (A = spdiagm(0=>(2/h^2)*ones(ComplexF64, n),1=>(-1/h^2)*ones(ComplexF64, n-1),-1=>(-1/h^2)*ones(ComplexF64, n-1)); #- Sommerfeld;
+        # A[1,end] = -1/h^2;            # Periodic BC.
+        # A[end,1] = -1/h^2;
+        A[1,1]=1/h^2;                   # Neuman BC. See NumericalPDEs to understand why.
+        A[1,1] -= 1im * sqrt(real(m)) * (1.0/h);
+        A[n,n]=1/h^2;
+        A[n,n] -= 1im * sqrt(real(m)) * (1.0/h);
+        return A;
+        );
+
+L = kron(In(n), Lap1D(h,n)) + kron(Lap1D(h,n), In(n)) - m .* spdiagm(0=>ones(n*n));
+
+f = () -> L * vec(sol)
+
+t = f()
+t = reshape(t, (n, n))
+heatmap(real.(t))
+
+
 # mat = matrix_conv_without(n, h, b, m);
-mat = matrix_conv(n, h, b, m);
-heatmap(real.(mat))
+# mat = matrix_conv(n, h, b, m);
+# heatmap(real.(mat))
 # heatmap(imag.(mat))
 # heatmap(abs.(mat))
