@@ -94,9 +94,9 @@ end
 
 n = 200;
 pad = n;
-# n = n+pad;
+# n_pad = n+pad;
 h = 2.0/n;
-m = (0.1/(h^2))*(1.0 + 1im*0.02)          # m = k^2. In this case it is constant through space (x).
+m = (0.1/(h^2))*(1.0 + 1im*0.2)          # m = k^2. In this case it is constant through space (x).
 
 kernel = zeros(ComplexF64, 3, 3);
 kernel += [[0 -1 0];[-1 4 -1];[0 -1 0]] / h^2 - m .* [[0 0 0];[0 1 0];[0 0 0]];
@@ -115,7 +115,22 @@ hinv = temp[n/2+1:3n/2,n/2+1:3n/2]
 heatmap(real.(hinv))
 # mat = matrix_conv_without(n, h, b, m);
 
-# mat = matrix_conv(n, h, b, m);
-# heatmap(real.(mat))
-# heatmap(imag.(mat))
-# heatmap(abs.(mat))
+mat = matrix_conv(n, h, b, m);
+heatmap(real.(mat))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
