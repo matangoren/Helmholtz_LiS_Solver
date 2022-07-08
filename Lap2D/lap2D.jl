@@ -50,7 +50,7 @@ end
 
 In = (n::Int64)->(return spdiagm(0=>ones(ComplexF64, n)));
 
-function matrix_conv(n, h, b, m)
+  function matrix_conv(n, h, b, m)
     Lap1D = (h::Float64,n::Int64) -> 
         (A = spdiagm(0=>(2/h^2)*ones(ComplexF64, n),1=>(-1/h^2)*ones(ComplexF64, n-1),-1=>(-1/h^2)*ones(ComplexF64, n-1)); #- Sommerfeld;
         # A[1,end] = -1/h^2;            # Periodic BC.
@@ -111,7 +111,9 @@ heatmap(real.(temp))
 
 temp = fft_conv_3(kernel, n, pad, b, m);
 heatmap(real.(temp))
-hinv = temp[n/2+1:3n/2,n/2+1:3n/2]
+# hinv = temp[n/2+1:3n/2,n/2+1:3n/2]
+
+hinv = temp[201:400,201:400]
 heatmap(real.(hinv))
 # mat = matrix_conv_without(n, h, b, m);
 mat = matrix_conv(n, h, b, m);
