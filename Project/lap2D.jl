@@ -62,6 +62,7 @@ In = (n::Int64)->(return spdiagm(0=>ones(ComplexF64, n)));
         return A;
         );
 
+    # This is another way to add the Sommerfeld BC. When using this, also uncomment the comment at the end of line 75.
     # fact = 1 * sqrt(real(m)) * (1.0/h);
     # Sommerfeld = zeros(n, n)
     # Sommerfeld[1, :] .= fact
@@ -143,10 +144,3 @@ f = () -> L * vec(sol)
 t = f()
 t = reshape(t, (n, n))
 heatmap(real.(t))
-
-
-# mat = matrix_conv_without(n, h, b, m);
-# mat = matrix_conv(n, h, b, m);
-# heatmap(real.(mat))
-# heatmap(imag.(mat))
-# heatmap(abs.(mat))
