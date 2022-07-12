@@ -111,7 +111,8 @@ b[div(n,2), div(n,2)] = 1.0;
 # Generate G (Green's function for a single source in the middle of the grid).
 temp = fft_conv_3(kernel, n, pad, b, m);
 heatmap(real.(temp))
-g = temp[Int(n/2+1):Int(5n/2),Int(n/2+1):Int(5n/2)]
+# g = temp[Int(n/2+1):Int(5n/2),Int(n/2+1):Int(5n/2)]
+g_temp = temp[Int(n_pad/2-n)+1:Int(n_pad/2+n), Int(n_pad/2-n)+1:Int(n_pad/2+n)]
 heatmap(real.(g))
 
 q = zeros(ComplexF64, n, n);
