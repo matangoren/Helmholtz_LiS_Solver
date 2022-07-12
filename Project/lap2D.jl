@@ -41,7 +41,8 @@ function fft_conv_3(kernel, n, pad, b, m::ComplexF64)
     hop[end,end] = kernel[1,1]
     hath = fft(hop);
     b_new = zeros(ComplexF64,n+2pad,n+2pad)
-    b_new[n+1:2n,n+1:2n] .= b
+    # b_new[n+1:2n,n+1:2n] .= b
+    b_new[pad+1:pad+n, pad+1:pad+n] .= b
     hatb = fft(b_new);
     hatu = hatb ./ hath;
     u = ifft(hatu);
