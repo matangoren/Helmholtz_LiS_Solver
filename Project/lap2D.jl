@@ -41,7 +41,8 @@ function fft_conv_3(kernel, n, pad, b, m::ComplexF64)
     hop[end,end] = kernel[1,1]
     hath = fft(hop);
     b_new = zeros(ComplexF64,n+2pad,n+2pad)
-    b_new[n+1:2n,n+1:2n] .= b
+    # b_new[n+1:2n,n+1:2n] .= b
+    b_new[pad+1:pad+n, pad+1:pad+n] .= b
     hatb = fft(b_new);
     hatu = hatb ./ hath;
     u = ifft(hatu);
@@ -62,6 +63,7 @@ In = (n::Int64)->(return spdiagm(0=>ones(ComplexF64, n)));
         return A;
         );
 
+    # This is another way to add the Sommerfeld BC. When using this, also uncomment the comment at the end of line 75.
     # fact = 1 * sqrt(real(m)) * (1.0/h);
     # Sommerfeld = zeros(n, n)
     # Sommerfeld[1, :] .= fact
@@ -109,7 +111,8 @@ b[div(n,2), div(n,2)] = 1.0;
 # Generate G (Green's function for a single source in the middle of the grid).
 temp = fft_conv_3(kernel, n, pad, b, m);
 heatmap(real.(temp))
-g = temp[Int(n/2+1):Int(5n/2),Int(n/2+1):Int(5n/2)]
+# g = temp[Int(n/2+1):Int(5n/2),Int(n/2+1):Int(5n/2)]
+g_temp = temp[Int(n_pad/2-n)+1:Int(n_pad/2+n), Int(n_pad/2-n)+1:Int(n_pad/2+n)]
 heatmap(real.(g))
 
 q = zeros(ComplexF64, n, n);
@@ -143,10 +146,3 @@ f = () -> L * vec(sol)
 t = f()
 t = reshape(t, (n, n))
 heatmap(real.(t))
-
-
-# mat = matrix_conv_without(n, h, b, m);
-# mat = matrix_conv(n, h, b, m);
-# heatmap(real.(mat))
-# heatmap(imag.(mat))
-# heatmap(abs.(mat))
