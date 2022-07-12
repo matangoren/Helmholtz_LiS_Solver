@@ -97,7 +97,7 @@ n = 200;
 pad = n;
 n_pad = n+pad;
 h = 2.0/n;
-m = (0.1/(h^2))*(1.0 + 1im*0.02)         # m = k^2. In this case it is constant through space (x).
+m = (0.1/(h^2))*(1.0 + 1im*0.002)         # m = k^2. In this case it is constant through space (x).
                                         # m is more or less k^2
 kernel = zeros(ComplexF64, 3, 3);
 kernel += [[0 -1 0];[-1 4 -1];[0 -1 0]] / h^2 - m .* [[0 0 0];[0 1 0];[0 0 0]];
