@@ -42,8 +42,7 @@ function fft_conv_3(kernel, n, pad, b, m::ComplexF64)
     hop[end,end] = kernel[1,1]
     hath = fft(hop);
     b_new = zeros(ComplexF64,n+2pad,n+2pad)
-    # b_new[n+1:2n,n+1:2n] .= b
-    b_new[Int(pad+1) : Int(pad+n), Int(pad+1) : Int(pad+n)] .= b
+    b_new[pad+1:pad+n,pad+1:pad+n] .= b
     hatb = fft(b_new);
     hatu = hatb ./ hath;
     u = ifft(hatu);
@@ -110,16 +109,16 @@ b[div(n,2), div(n,2)] = 1.0;
 # Generate G (Green's function for a single source in the middle of the grid).
 temp = fft_conv_3(kernel, n, pad, b, m);
 heatmap(real.(temp))
-temp
-# g_temp = temp[Int(n/2+1):Int(5n/2),Int(n/2+1):Int(5n/2)]
 g_temp = temp[Int(n_pad/2-n)+1:Int(n_pad/2+n), Int(n_pad/2-n)+1:Int(n_pad/2+n)]
 heatmap(real.(g))
 
+# Define the source of the problem, and pad it with n/2 from each side (overall 2n*2n grid).
 q = zeros(ComplexF64, n, n);
 q[div(n,2), div(n,2)] = 1.0;
 q_pad = zeros(2n,2n)
 q_pad[Int(n/2)+1:Int(3n/2),Int(n/2)+1:Int(3n/2)] .= q
 
+# Perform the convolution of the Green's function with the source.
 sol = ifft(fft(g) .* fft(q_pad))
 sol = sol[Int(n/2)+1:Int(3n/2),Int(n/2)+1:Int(3n/2)]
 heatmap(real.(sol))
