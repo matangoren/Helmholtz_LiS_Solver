@@ -113,7 +113,7 @@ hop = kron(In(n), Lap1D(h,n)) + kron(Lap1D(h,n), In(n)) - m .* spdiagm(0=>ones(n
 f = () -> hop * vec(sol)
 f2 = () -> norm(hop * vec(sol) .- vec(q)) / norm(vec(q))
 display(f2())
-
+ 
 
 t = f()
 t = reshape(t, (n, n))
