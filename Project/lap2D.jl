@@ -54,7 +54,6 @@ function matrix_conv(n, h, b, m)
     return reshape((Lap2D\b),(n,n))
 end 
 
-
 n = 200;
 pad = n;
 n_pad = n+pad;
