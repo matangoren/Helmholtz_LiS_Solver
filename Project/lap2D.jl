@@ -46,33 +46,34 @@ function matrix_conv(n, h, b, m)
     # Sommerfeld = spdiagm(0=>Sommerfeld[:])
 
     # Add a space-dependency to m (which is approximately k^2).
-    m_x = zeros(ComplexF64, n, n) + 0.5             # Make sure this is broadcasted.
-    m_x[Int(n/4): Int(3n/4), Int(n/4):Int(3n/4)] = ones(Int(n/2))
+    m_x = zeros(ComplexF64, n, n) .+ 0.85             # Make sure this is broadcasted.
+    m_x[Int(n/4)+1: Int(3n/4), Int(n/4)+1:Int(3n/4)] = ones(Int(n/2), Int(n/2))
 
-    Lap2D = kron(In(n), Lap1D(h,n)) + kron(Lap1D(h,n), In(n)) - m .* spdiagm(0=>ones(ComplexF64, n*n)); #- Sommerfeld;
+    # Lap2D = kron(In(n), Lap1D(h,n)) + kron(Lap1D(h,n), In(n)) - m .* spdiagm(0=>ones(ComplexF64, n*n)); #- Sommerfeld;
+    Lap2D = kron(In(n), Lap1D(h,n)) + kron(Lap1D(h,n), In(n)) - m .* spdiagm(0=>m_x[:]); #- Sommerfeld;
     b = reshape(b, (n*n, 1))
-    return reshape((Lap2D\b),(n,n))
+    return reshape((Lap2D\b),(n,n)), Lap2D
 end 
 
 n = 200;
 pad = n;
 n_pad = n+pad;
 h = 2.0/n;
-m = (0.1/(h^2))*(1.0 + 1im*0.08)         # m = k^2. In this case it is constant through space (x).
+m = (0.1/(h^2))*(1.0 + 1im*0.05)         # m = k^2. In this case it is constant through space (x).
                                         # m is more or less k^2
 kernel = zeros(ComplexF64, 3, 3);
 kernel += [[0 -1 0];[-1 4 -1];[0 -1 0]] / h^2 - m .* [[0 0 0];[0 1 0];[0 0 0]];
 
-# kernel2 = zeros(ComplexF64, 3, 3);
-# kernel2 += [[0 0 0];[0 1 0];[0 0 0]];
+# kernel = zeros(ComplexF64, 3, 3);
+# kernel += [[[0 0 0];[0 1 0];[0 0 0]];] + 1im * [[[0 0 0];[0 0.001 0];[0 0 0]];]
 
 b = zeros(ComplexF64, n, n);
 b[div(n,2), div(n,2)] = 1.0;
 
-# Generate G (Green's function for a single source in the middle of the grid).
+# Generate G (Green's function for a single source in the middle of the grid). Call it 'g_temp'.
 temp = fft_conv(kernel, n, pad, b, m);
 heatmap(real.(temp))
-g_temp = temp[Int(n/2+1):Int(5n/2),Int(n/2+1):Int(5n/2)]
+g_temp = temp[Int(n/2):Int(5n/2)-1,Int(n/2):Int(5n/2)-1]
 # g_temp = temp[Int(((n_pad/2)-n)+1):Int((n_pad/2)+n), Int(((n_pad/2)-n)+1):Int((n_pad/2)+n)]
 heatmap(real.(g_temp))
 g_temp = fftshift(g_temp)
@@ -80,20 +81,18 @@ heatmap(real.(g_temp))
 
 # Define the source of the problem, and pad it with n/2 from each side (overall 2n*2n grid).
 q = zeros(ComplexF64, n, n);
-q[div(n,4), div(n,4)] = 1.0;
-# q = rand(ComplexF64, n, n)
+# q[div(n,4), div(n,4)] = 1.0;
+q = rand(ComplexF64, n, n) # + 1im * rand(ComplexF64, n, n)
 q_pad = zeros(ComplexF64,2n,2n)
 q_pad[Int(n/2)+1:Int(3n/2),Int(n/2)+1:Int(3n/2)] .= q
-# q_pad[1, 1] = 1.0
-# q_pad[1:Int(n/2), 1:Int(n/2)] .= q[Int(n/2):end, Int(n/2):end]
-# q_pad[pad+1:pad+n, pad+1:pad+n] .= q
-# q_pad[1:n, 1:n] .= q
 
 # Perform the convolution of the Green's function with the source.
 sol = ifft(fft(g_temp) .* fft(q_pad))
 sol = sol[Int(n/2)+1:Int(3n/2),Int(n/2)+1:Int(3n/2)]
-# sol = sol[1:n, 1:n]
 heatmap(real.(sol))
+
+
+
 
 
 # Sanity check: L*u needs to return q approximately
@@ -107,19 +106,34 @@ Lap1D = (h::Float64,n::Int64) ->
         A[n,n] -= 1im * sqrt(real(m)) * (1.0/h);
         return A;
         );
-
-hop = kron(In(n), Lap1D(h,n)) + kron(Lap1D(h,n), In(n)) - m .* spdiagm(0=>ones(n*n));
-
+# hop = kron(In(n), Lap1D(h,n)) + kron(Lap1D(h,n), In(n)) - m .* spdiagm(0=>ones(n*n));
+sol_temp, hop = matrix_conv(n, h, b, m)
+# hop = In(n*n) + 1im * 0.001 * In(n*n)
 f = () -> hop * vec(sol)
 f2 = () -> norm(hop * vec(sol) .- vec(q)) / norm(vec(q))
 display(f2())
- 
-
 t = f()
 t = reshape(t, (n, n))
 heatmap(real.(t))
-
 heatmap(reshape(real.(hop\vec(q) - vec(sol)), (n, n)))
-
 norm(vec(sol))
-norm(hop\vec(q) - vec(sol)) / norm(vec(sol))
+norm(hop\vec(q) - vec(sol)) / norm(vec(hop\vec(q)))
+
+
+
+
+
+
+
+# Write a function M that gets n, m, g_temp, q --> sol.
+
+# M is going to be our pre-conditioner.
+
+# Mtemp = (q) @ M(n,m,g_temp,q)
+
+
+
+
+
+
+
