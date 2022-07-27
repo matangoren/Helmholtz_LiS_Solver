@@ -99,12 +99,13 @@ n = 200;
 pad = n;
 n_pad = n+pad;
 h = 2.0/n;
-m = (0.1/(h^2))*(1.0 + 1im*0.002)         # m = k^2. In this case it is constant through space (x).
+m = (0.1/(h^2))*(1.0 + 1im*0.02)         # m = k^2. In this case it is constant through space (x).
                                         # m is more or less k^2
 kernel = zeros(ComplexF64, 3, 3);
 kernel += [[0 -1 0];[-1 4 -1];[0 -1 0]] / h^2 - m .* [[0 0 0];[0 1 0];[0 0 0]];
 b = zeros(ComplexF64, n, n);
-b[div(n,2), div(n,2)] = 1.0;
+b[div(n,2), div(1n,2)] = 1.0;
+# b[end, end] = 1.0;
 # b_pad = zeros(n+pad,n+pad)
 # b_pad[1:n,1:n] .= b
 
@@ -112,11 +113,12 @@ b[div(n,2), div(n,2)] = 1.0;
 temp = fft_conv_3(kernel, n, pad, b, m);
 heatmap(real.(temp))
 # g = temp[Int(n/2+1):Int(5n/2),Int(n/2+1):Int(5n/2)]
-g_temp = temp[Int(n_pad/2-n)+1:Int(n_pad/2+n), Int(n_pad/2-n)+1:Int(n_pad/2+n)]
+g = temp[Int(n/2+1):Int(5n/2),Int(n/2+1):Int(5n/2)]
 heatmap(real.(g))
 
 q = zeros(ComplexF64, n, n);
 q[div(n,2), div(n,2)] = 1.0;
+# q[1, 1] = 1.0;
 q_pad = zeros(2n,2n)
 q_pad[Int(n/2)+1:Int(3n/2),Int(n/2)+1:Int(3n/2)] .= q
 
