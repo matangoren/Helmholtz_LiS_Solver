@@ -92,16 +92,6 @@ end
 
 function sanity_check()
     # Sanity check: L*u needs to return q approximately
-    Lap1D = (h::Float64,n::Int64) -> 
-    (A = spdiagm(0=>(2/h^2)*ones(ComplexF64, n),1=>(-1/h^2)*ones(ComplexF64, n-1),-1=>(-1/h^2)*ones(ComplexF64, n-1)); #- Sommerfeld;
-    # A[1,end] = -1/h^2;            # Periodic BC.
-    # A[end,1] = -1/h^2;
-    A[1,1]=1/h^2;                   # Neuman BC. See NumericalPDEs to understand why.
-    A[1,1] -= 1im * sqrt(real(m)) * (1.0/h);
-    A[n,n]=1/h^2;
-    A[n,n] -= 1im * sqrt(real(m)) * (1.0/h);
-    return A;
-    );
     sol_temp, hop = matrix_conv(n, h, b, m)             # hop is Lap2D, calculated in matrix_conv.
     f = () -> hop * vec(sol)
     f2 = () -> norm(hop * vec(sol) .- vec(q)) / norm(vec(q))
