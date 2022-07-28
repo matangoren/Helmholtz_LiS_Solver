@@ -57,29 +57,29 @@ end
 
 function init_params()
     n = 200;
-    pad = n;
-    n_pad = n+pad;
     h = 2.0/n;
     m = (0.1/(h^2))*(1.0 + 1im*0.05)         # m = k^2. In this case it is constant through space (x).
                                             # m is more or less k^2
     kernel = zeros(ComplexF64, 3, 3);
     kernel += [[0 -1 0];[-1 4 -1];[0 -1 0]] / h^2 - m .* [[0 0 0];[0 1 0];[0 0 0]];
-    
-    b = zeros(ComplexF64, n, n);
-    b[div(n,2), div(n,2)] = 1.0;
 end
 
-function generate_green()
-    # Generate G (Green's function for a single source in the middle of the grid). Call it 'g_temp'.
+function generate_Green(n, kernel, pad, m)
+    # Define a point-source in the middle of the grid.
+    b = zeros(ComplexF64, n, n);
+    b[div(n,2), div(n,2)] = 1.0;
+
+    # Generate G (Green's function - solution for a single source in the middle of the grid).
     temp = fft_conv(kernel, n, pad, b, m);
     # heatmap(real.(temp))
     g_temp = temp[Int(n/2):Int(5n/2)-1,Int(n/2):Int(5n/2)-1]
     # heatmap(real.(g_temp))
     g_temp = fftshift(g_temp)
     # heatmap(real.(g_temp))
+    return g_temp
 end
 
-function solve_helm(q:: Matrix{ComplexF64})
+function solve_helm(n, q:: Matrix{ComplexF64}, g_temp)
     q_pad = zeros(ComplexF64,2n,2n)
     q_pad[Int(n/2)+1:Int(3n/2),Int(n/2)+1:Int(3n/2)] .= q
     
@@ -87,6 +87,7 @@ function solve_helm(q:: Matrix{ComplexF64})
     sol = ifft(fft(g_temp) .* fft(q_pad))
     sol = sol[Int(n/2)+1:Int(3n/2),Int(n/2)+1:Int(3n/2)]
     # heatmap(real.(sol))
+    return sol
 end
 
 function sanity_check()
@@ -109,17 +110,45 @@ function sanity_check()
     # heatmap(real.(t))
     # heatmap(reshape(real.(hop\vec(q) - vec(sol)), (n, n)))
     norm(vec(sol))
-    display(norm(hop\vec(q) - vec(sol)) / norm(hop\vec(q)))
+    return norm(hop\vec(q) - vec(sol)) / norm(hop\vec(q))
 end
 
 # Define the source. Later to be padded by n/2 from each side and solved via convolution with the greens function (solve_helm).
-# q = zeros(ComplexF64, n, n);                                  # Point source at [n/4, n/4].
-# q[div(n,4), div(n,4)] = 1.0;
-q = rand(ComplexF64, n, n) # + 1im * rand(ComplexF64, n, n)      # Random initializaton.
+q = zeros(ComplexF64, n, n);                                  # Point source at [n/4, n/4].
+q[div(n,4), div(n,4)] = 1.0;
+# q = rand(ComplexF64, n, n) # + 1im * rand(ComplexF64, n, n)      # Random initializaton.
 init_params()
-solve_helm(q)
-sanity_check()
+g_temp = generate_Green(n, kernel, pad, m)
+heatmap(real.(g_temp))
+sol = solve_helm(n, q, g_temp)
+heatmap(real.(sol))
+# sanity_check()
 
+
+function M(n, m, g_temp, q, h)
+    # Return solution given the parameters.
+
+    # Initialize kernel to be the five-point Laplacian operator (NumericalPDEs, pg. 56).
+    kernel = zeros(ComplexF64, 3, 3);
+    kernel += [[0 -1 0];[-1 4 -1];[0 -1 0]] / h^2 - m .* [[0 0 0];[0 1 0];[0 0 0]];
+
+    # Generate the Greens function, if didn't get it as param.
+    if isempty(g_temp)
+        g_temp = generate_Green(n, kernel, pad, m)
+    end
+
+    # Solve the system
+    sol = solve_helm(n, q:: Matrix{ComplexF64}, g_temp)
+    return sol
+end
+
+function Mtemp(q)
+    n = 200;
+    h = 2.0/n;
+    m = (0.1/(h^2))*(1.0 + 1im*0.05)         # m = k^2. In this case it is constant through space (x).
+    g_temp = generate_Green(n, kernel, pad, m)
+    return M(n, m, g_temp, q, h)
+end
 
 
 # Write a function M that gets n, m, g_temp, q --> sol.
