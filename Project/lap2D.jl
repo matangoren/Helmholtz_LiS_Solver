@@ -5,8 +5,6 @@ using SparseArrays
 using LinearAlgebra
 using Images, FileIO
 
-In = (n::Int64)->(return spdiagm(0=>ones(ComplexF64, n)));
-
 function fft_conv(kernel, n, pad, b, m::ComplexF64)
     # Pad with pad at each side of the grid -> overall (n+2pad)*(n+2pad) grid.
     hop = zeros(ComplexF64,n+2pad,n+2pad);
@@ -62,6 +60,8 @@ function init_params()
                                             # m is more or less k^2
     kernel = zeros(ComplexF64, 3, 3);
     kernel += [[0 -1 0];[-1 4 -1];[0 -1 0]] / h^2 - m .* [[0 0 0];[0 1 0];[0 0 0]];
+
+    In = (n::Int64)->(return spdiagm(0=>ones(ComplexF64, n)));
 end
 
 function generate_Green(n, kernel, pad, m)
