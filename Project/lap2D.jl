@@ -122,10 +122,6 @@ sanity_check()
 
 
 
-
-
-
-
 # Write a function M that gets n, m, g_temp, q --> sol.
 
 # M is going to be our pre-conditioner.
