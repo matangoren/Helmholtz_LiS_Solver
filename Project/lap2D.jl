@@ -4,6 +4,10 @@ using FFTW
 using SparseArrays
 using LinearAlgebra
 using Images, FileIO
+# using KrylovMethods
+using Test
+using LinearOperators
+using Printf
 
 In = (n::Int64)->(return spdiagm(0=>ones(ComplexF64, n)));
 
@@ -120,7 +124,15 @@ norm(vec(sol))
 norm(hop\vec(q) - vec(sol)) / norm(vec(hop\vec(q)))
 
 
+A  = sprandn(100,100,.1) + SparseMatrixCSC(10.0I, 100, 100)
+n  = size(A,2)
+D  = diag(A)
+M2 = x -> Vector(D.\x)
+rhs = randn(100)
+tol = 1e-6;
 
+# test printing and behaviour for early stopping
+xtt = fgmres(A,rhs ,3,tol=1e-12,maxIter=3,out=2,storeInterm=true)
 
 
 
