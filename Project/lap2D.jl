@@ -113,17 +113,18 @@ function sanity_check()
     return norm(hop\vec(q) - vec(sol)) / norm(hop\vec(q))
 end
 
-# Define the source. Later to be padded by n/2 from each side and solved via convolution with the greens function (solve_helm).
-q = zeros(ComplexF64, n, n);                                  # Point source at [n/4, n/4].
-q[div(n,4), div(n,4)] = 1.0;
-# q = rand(ComplexF64, n, n) # + 1im * rand(ComplexF64, n, n)      # Random initializaton.
-init_params()
-g_temp = generate_Green(n, kernel, pad, m)
-heatmap(real.(g_temp))
-sol = solve_helm(n, q, g_temp)
-heatmap(real.(sol))
-# sanity_check()
-
+function whole_process()
+    # Define the source. Later to be padded by n/2 from each side and solved via convolution with the greens function (solve_helm).
+    q = zeros(ComplexF64, n, n);                                  # Point source at [n/4, n/4].
+    q[div(n,4), div(n,4)] = 1.0;
+    # q = rand(ComplexF64, n, n) # + 1im * rand(ComplexF64, n, n)      # Random initializaton.
+    init_params()
+    g_temp = generate_Green(n, kernel, pad, m)
+    heatmap(real.(g_temp))
+    sol = solve_helm(n, q, g_temp)
+    heatmap(real.(sol))
+    sanity_check()
+end
 
 function M(n, m, g_temp, q, h)
     # Return solution given the parameters.
@@ -149,16 +150,4 @@ function Mtemp(q)
     g_temp = generate_Green(n, kernel, pad, m)
     return M(n, m, g_temp, q, h)
 end
-
-
-# Write a function M that gets n, m, g_temp, q --> sol.
-
-# M is going to be our pre-conditioner.
-
-# Mtemp = (q) @ M(n,m,g_temp,q)
-
-# Use 'clone' in Julia when using krylov methods of Eran's code (GMRES).
-
-
-
 
