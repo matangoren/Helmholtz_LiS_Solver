@@ -116,7 +116,7 @@ function whole_process()
     sanity_check()
 end
 
-function M(n, m, g_temp, q, h)
+function M(n, m,q, h, g_temp)
     # Return solution given the parameters.
 
     # Initialize kernel to be the five-point Laplacian operator (NumericalPDEs, pg. 56).
@@ -138,6 +138,6 @@ function Mtemp(q)
     h = 2.0/n;
     m = (0.1/(h^2))*(1.0 + 1im*0.05)         # m = k^2. In this case it is constant through space (x).
     g_temp = generate_Green(n, kernel, pad, m)
-    return M(n, m, g_temp, q, h)
+    return M(n, m, q, h, g_temp)
 end
 
