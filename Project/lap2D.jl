@@ -138,7 +138,6 @@ function M_temp(q)
     return M(n, m, q, h, g_temp)
 end
 
-
 function gmres_sequence()
     # init_params
     n = 200;
