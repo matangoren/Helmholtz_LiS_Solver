@@ -4,6 +4,7 @@ using FFTW
 using SparseArrays
 using LinearAlgebra
 using Images, FileIO
+using KrylovMethods
 
 function fft_conv(kernel, n, pad, b, m::ComplexF64)
     # Pad with pad at each side of the grid -> overall (n+2pad)*(n+2pad) grid.
@@ -104,19 +105,14 @@ function sanity_check()
 end
 
 function whole_process()
-    # Define the source. Later to be padded by n/2 from each side and solved via convolution with the greens function (solve_helm).
     q = zeros(ComplexF64, n, n);                                  # Point source at [n/4, n/4].
     q[div(n,4), div(n,4)] = 1.0;
-    # q = rand(ComplexF64, n, n) # + 1im * rand(ComplexF64, n, n)      # Random initializaton.
     init_params()
     g_temp = generate_Green(n, kernel, pad, m)
-    heatmap(real.(g_temp))
     sol = solve_helm(n, q, g_temp)
-    heatmap(real.(sol))
-    sanity_check()
 end
 
-function M(n, m,q, h, g_temp)
+function M(n, m, q, h, g_temp)
     # Return solution given the parameters.
 
     # Initialize kernel to be the five-point Laplacian operator (NumericalPDEs, pg. 56).
@@ -129,15 +125,41 @@ function M(n, m,q, h, g_temp)
     end
 
     # Solve the system
+    q = reshape(q, (n, n))
     sol = solve_helm(n, q:: Matrix{ComplexF64}, g_temp)
-    return sol
+    return sol[:]
 end
 
-function Mtemp(q)
+function M_temp(q)
     n = 200;
     h = 2.0/n;
     m = (0.1/(h^2))*(1.0 + 1im*0.05)         # m = k^2. In this case it is constant through space (x).
     g_temp = generate_Green(n, kernel, pad, m)
     return M(n, m, q, h, g_temp)
 end
+
+
+function gmres_sequence()
+    # init_params
+    n = 200;
+    h = 2.0/n;
+    m = (0.1/(h^2))*(1.0 + 1im*0.05)         # m = k^2. In this case it is constant through space (x).
+                                            # m is more or less k^2
+    kernel = zeros(ComplexF64, 3, 3);
+    kernel += [[0 -1 0];[-1 4 -1];[0 -1 0]] / h^2 - m .* [[0 0 0];[0 1 0];[0 0 0]];
+
+    q = rand(ComplexF64, n * n) # + 1im * rand(ComplexF64, n, n)      # Random initializaton.
+    # q = q = zeros(ComplexF64, n, n);                                  # Point source at [n/4, n/4].
+    # q[div(n,4), div(n,4)] = 1.0;
+    # q = q[:]
+    _ , A = matrix_conv(n, h, q, m)
+    tol = 1e-6;
+    A_func = x -> A * x
+    # test printing and behaviour for early stopping
+    xtt = fgmres(A_func,q ,10,tol=tol,maxIter=5,M=M_temp, out=2,storeInterm=true)
+    return xtt
+end
+
+gmres_sequence()
+
 
