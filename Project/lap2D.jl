@@ -6,6 +6,18 @@ using LinearAlgebra
 using Images, FileIO
 using KrylovMethods
 
+In = (n::Int64)->(return spdiagm(0=>ones(ComplexF64, n)));
+
+function init_params()
+    n = 200;
+    h = 2.0/n;
+    m = (0.1/(h^2))*(1.0 + 1im*0.05)         # m = k^2. In this case it is constant through space (x).
+                                            # m is more or less k^2
+    kernel = zeros(ComplexF64, 3, 3);
+    kernel += [[0 -1 0];[-1 4 -1];[0 -1 0]] / h^2 - m .* [[0 0 0];[0 1 0];[0 0 0]];
+
+end
+
 function fft_conv(kernel, n, pad, b, m::ComplexF64)
     # Pad with pad at each side of the grid -> overall (n+2pad)*(n+2pad) grid.
     hop = zeros(ComplexF64,n+2pad,n+2pad);
@@ -54,21 +66,12 @@ function matrix_conv(n, h, b, m)
     return reshape((Lap2D\b),(n,n)), Lap2D
 end 
 
-function init_params()
-    n = 200;
-    h = 2.0/n;
-    m = (0.1/(h^2))*(1.0 + 1im*0.05)         # m = k^2. In this case it is constant through space (x).
-                                            # m is more or less k^2
-    kernel = zeros(ComplexF64, 3, 3);
-    kernel += [[0 -1 0];[-1 4 -1];[0 -1 0]] / h^2 - m .* [[0 0 0];[0 1 0];[0 0 0]];
 
-    In = (n::Int64)->(return spdiagm(0=>ones(ComplexF64, n)));
-end
-
-function generate_Green(n, kernel, pad, m)
+function generate_Green(n, kernel, m)
     # Define a point-source in the middle of the grid.
     b = zeros(ComplexF64, n, n);
     b[div(n,2), div(n,2)] = 1.0;
+    pad = n
 
     # Generate G (Green's function - solution for a single source in the middle of the grid).
     temp = fft_conv(kernel, n, pad, b, m);
@@ -134,7 +137,10 @@ function M_temp(q)
     n = 200;
     h = 2.0/n;
     m = (0.1/(h^2))*(1.0 + 1im*0.05)         # m = k^2. In this case it is constant through space (x).
-    g_temp = generate_Green(n, kernel, pad, m)
+    # Add some kind of generator (like in python) for m (which is m_0..).
+    kernel = zeros(ComplexF64, 3, 3);
+    kernel += [[0 -1 0];[-1 4 -1];[0 -1 0]] / h^2 - m .* [[0 0 0];[0 1 0];[0 0 0]];
+    g_temp = generate_Green(n, kernel, m)
     return M(n, m, q, h, g_temp)
 end
 
