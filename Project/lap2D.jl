@@ -19,7 +19,7 @@ function init_params()
 
 end
 
-function fft_conv(kernel, n, pad, b, m::ComplexF64)
+function fft_conv(kernel, n, pad, b)
     # Pad with pad at each side of the grid -> overall (n+2pad)*(n+2pad) grid.
     hop = zeros(ComplexF64,n+2pad,n+2pad);
     hop[1:2,1:2] = kernel[2:3,2:3]
@@ -60,6 +60,7 @@ function matrix_conv(n, h, b, m)
     # Add a space-dependency to m (which is approximately k^2).
     m_x = zeros(ComplexF64, n, n) .+ 0.85             # Make sure this is broadcasted.
     m_x[Int(n/4)+1: Int(3n/4), Int(n/4)+1:Int(3n/4)] = ones(Int(n/2), Int(n/2))
+    # m_x = m .* m_x
 
     # Lap2D = kron(In(n), Lap1D(h,n)) + kron(Lap1D(h,n), In(n)) - m .* spdiagm(0=>ones(ComplexF64, n*n)); #- Sommerfeld;
     Lap2D = kron(In(n), Lap1D(h,n)) + kron(Lap1D(h,n), In(n)) - m .* spdiagm(0=>m_x[:]); #- Sommerfeld;
@@ -75,7 +76,7 @@ function generate_Green(n, kernel, m)
     pad = n
 
     # Generate G (Green's function - solution for a single source in the middle of the grid).
-    temp = fft_conv(kernel, n, pad, b, m);
+    temp = fft_conv(kernel, n, pad, b);
     # heatmap(real.(temp))
     g_temp = temp[Int(n/2):Int(5n/2)-1,Int(n/2):Int(5n/2)-1]
     # heatmap(real.(g_temp))
