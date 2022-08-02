@@ -5,6 +5,7 @@ using SparseArrays
 using LinearAlgebra
 using Images, FileIO
 using KrylovMethods
+using Printf
 
 In = (n::Int64)->(return spdiagm(0=>ones(ComplexF64, n)));
 
@@ -144,6 +145,43 @@ function M_temp(q)
     return M(n, m, q, h, g_temp)
 end
 
+function M_temp_m(m, q)
+    n = 200;
+    h = 2.0/n;
+    # m = (0.1/(h^2))*(1.0 + 1im*0.05)         # m = k^2. In this case it is constant through space (x).
+    # Add some kind of generator (like in python) for m (which is m_0..).
+    kernel = zeros(ComplexF64, 3, 3);
+    kernel += [[0 -1 0];[-1 4 -1];[0 -1 0]] / h^2 - m .* [[0 0 0];[0 1 0];[0 0 0]];
+    g_temp = generate_Green(n, kernel, m)
+    return M(n, m, q, h, g_temp)
+end
+
+function m_range(start, step, end_)
+    return start:step:end_
+end
+n = 200;
+h = 2.0/n;
+m = (0.1/(h^2))*(1.0 + 1im*0.05)
+r = ((i + m) for i in m_range(0, 0.1, 100))
+function m_gen()
+    Channel() do ch2
+        for j in r
+            put!(ch2, j)
+        end
+    end
+end
+m_g = m_gen()
+take!(m_g)
+function M_temp_gen(q)
+    try
+        m = take!(m_g)
+        return M_temp_m(m, q)
+    catch e
+        
+        println("Some problem occured in M_temp_gen!")
+    end
+end
+
 function gmres_sequence()
     # init_params
     n = 200;
@@ -157,14 +195,15 @@ function gmres_sequence()
     # q = q = zeros(ComplexF64, n, n);                                  # Point source at [n/4, n/4].
     # q[div(n,4), div(n,4)] = 1.0;
     # q = q[:]
-    _ , A = matrix_conv(n, h, q, m)
+    _ , A = matrix_conv(n, h, q, m)     # A is hop (Helmholtz Operator).
     tol = 1e-6;
     A_func = x -> A * x
     # test printing and behaviour for early stopping
-    xtt = fgmres(A_func,q ,10,tol=tol,maxIter=5,M=M_temp, out=2,storeInterm=true)
+    xtt = fgmres(A_func,q ,10,tol=tol,maxIter=5,M=M_temp_gen, out=2,storeInterm=true)
     return xtt
 end
 
 gmres_sequence()
+
 
 
