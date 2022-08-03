@@ -5,6 +5,7 @@ using SparseArrays
 using LinearAlgebra
 using Images, FileIO
 using KrylovMethods
+using Printf
 
 In = (n::Int64)->(return spdiagm(0=>ones(ComplexF64, n)));
 
@@ -16,7 +17,6 @@ function init_params()
                                             # m is more or less k^2
     kernel = zeros(ComplexF64, 3, 3);
     kernel += [[0 -1 0];[-1 4 -1];[0 -1 0]] / h^2 - m .* [[0 0 0];[0 1 0];[0 0 0]];
-    
     b = zeros(ComplexF64, n, n);
     b[div(n,2), div(n,2)] = 1.0;
     return kernel, n, pad, h, m, b;
@@ -105,8 +105,10 @@ function M(n, m, q, kernel, pad, g_temp, b)
     return sol[:]
 end
 
-function Mtemp(q, kernel, n, pad, curr_m, b, delta, condition)
+function Mtemp(q, n, h, pad, curr_m, b, delta, condition)
     m = curr_m[1];
+    kernel = zeros(ComplexF64, 3, 3);
+    kernel += [[0 -1 0];[-1 4 -1];[0 -1 0]] / h^2 - m .* [[0 0 0];[0 1 0];[0 0 0]];
     println(m)
     if condition
         curr_m .-= delta;
@@ -137,21 +139,24 @@ function whole_process()
     sol = solve_helm(n, q, g_temp)
 end
 
-function gmres_sequence(condition, q)
+function gmres_sequence(diff, q, m_x)
     # init_params
     kernel, n, pad, h, m, b = init_params()
+    m_x = m .* m_x
     # q = rand(ComplexF64, n , n) # + 1im * rand(ComplexF64, n, n)      # Random initializaton.
     # q = q = zeros(ComplexF64, n, n);                                  # Point source at [n/4, n/4].
     # q[div(n,4), div(n,4)] = 1.0;
     # q = q[:]
     _ , A = matrix_conv(n, h, q, m)
-    min_A = get_value(A, findmin);
-    max_A = get_value(A, findmax);
-    maxiter = 7
+    min_m = get_value(m_x, findmin);
+    max_m = get_value(m_x, findmax);
+    @printf("m max value: %f + %fi, m min value: %f + %fi\n", real(max_m), imag(max_m), real(min_m), imag(min_m));    maxiter = 7
     restrt = 10
-    delta = (norm(max_A) + norm(min_A)) / (maxiter * restrt);
-    curr_m = [max_A];
-    M_temp = q1 -> Mtemp(q1, kernel, n, pad, curr_m, b, delta, condition);
+    maxiter = 7
+    delta = (real(max_m) - real(min_m)) / (maxiter * restrt) + abs(imag(max_m) - imag(min_m))im / (maxiter * restrt);
+    println(delta)
+    curr_m = [max_m];
+    M_temp = q1 -> Mtemp(q1, n, h, pad, curr_m, b, delta, diff);
     tol = 1e-6;
     A_func = x -> A * x
     # test printing and behaviour for early stopping
@@ -165,7 +170,10 @@ function get_value(A, operator)
     return A[i,j];
 end
 
+
 n = 200
+m_x = zeros(ComplexF64, n, n) .+ 0.8             # Make sure this is broadcasted.
+m_x[Int(n/4)+1: Int(3n/4), Int(n/4)+1:Int(3n/4)] = ones(Int(n/2), Int(n/2))
 q = rand(ComplexF64, n , n) # + 1im * rand(ComplexF64, n, n)      # Random initializaton.
 # The output values of fgmres are: 
 #   1. strage long matrix (40K x num of iter).
@@ -173,13 +181,14 @@ q = rand(ComplexF64, n , n) # + 1im * rand(ComplexF64, n, n)      # Random initi
 #   3. Min value.
 #   4. Number of iterations.
 #   5. The history of the gmres sequensce. 
-x = gmres_sequence(false, q)
+x = gmres_sequence(false, q, m_x)
 size(x[5])
 t1 = x[3]
 # Use 'clone' in Julia when using krylov methods of Eran's code (GMRES).
 
-x = gmres_sequence(true, q)
+x = gmres_sequence(true, q, m_x)
 size(x[5])
 t2 = x[3]
 
 t1 - t2
+
