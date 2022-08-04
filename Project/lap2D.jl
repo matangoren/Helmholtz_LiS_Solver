@@ -6,6 +6,10 @@ using LinearAlgebra
 using Images, FileIO
 using KrylovMethods
 using Printf
+using Random
+using Distributions
+
+Random.seed!(1234);
 
 In = (n::Int64)->(return spdiagm(0=>ones(ComplexF64, n)));
 
