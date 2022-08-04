@@ -186,7 +186,7 @@ m_0s = zeros(ComplexF64, size(m_0_reals)[1])
 for i in 1:size(m_0s)[1]
     m_0s[i] = m_0_reals[i] + m_0_ims[i]im
 end
-m_g = m_gen(m_0s)
-fgmres_sequence(q, ratios, m_g, max_iter, restrt)
+# m_g = m_gen(m_0s)
+fgmres_sequence(q, ratios, m_0s, max_iter, restrt)
 
 
