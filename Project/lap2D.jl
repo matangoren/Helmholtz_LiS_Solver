@@ -215,11 +215,10 @@ m_0s_avg = avg_m(m_base, dual_ratio, max_iter, restrt)
 #   3. Min value.
 #   4. Number of iterations.
 #   5. The history of the gmres sequensce. 
-x = fgmres_sequence(q, dual_ratio, m_0s_linear, max_iter, restrt)
+x = fgmres_sequence(q, dual_ratio, n, h, m_base, pad_green, m_0s_linear, max_iter, restrt)
 size(x[5])
 t1 = x[3]
-
-y = fgmres_sequence(q, dual_ratio, m_0s_avg, max_iter, restrt)
+y = fgmres_sequence(q, dual_ratio, n, h, m_base, pad_green, m_0s_avg, max_iter, restrt)
 size(y[5])
 t2 = y[3]
 
