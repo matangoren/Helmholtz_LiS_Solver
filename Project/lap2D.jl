@@ -13,7 +13,7 @@ function init_params()
     n = 200;
     h = 2.0/n;
     m_base = (0.1/(h^2))*(1.0 + 1im*0.05)         # m = k^2. In this case it is constant through space (x).
-
+    
     # Define a point-source in the middle of the grid.
     b = zeros(ComplexF64, n, n);
     b[div(n,2), div(n,2)] = 1.0;
@@ -89,21 +89,28 @@ function solve_helm(n, q:: Matrix{ComplexF64}, g_temp)
 end
 
 function sanity_check()
-    # Need to update to run properly.
-
+    q = q = zeros(ComplexF64, n, n);                                  # Point source at [n/4, n/4].
+    q[div(n,4), div(n,4)] = 1.0;
     # Sanity check: L*u needs to return q approximately
-    m_base = 
-    ratios = 
-    sol_temp, hop = matrix_conv(n, h, b, m_base, ratios)             # hop is Lap2D, calculated in matrix_conv.
-    f = () -> hop * vec(sol)
-    f2 = () -> norm(hop * vec(sol) .- vec(q)) / norm(vec(q))
+    m_base = (0.1/(h^2))*(1.0 + 1im*0.05)
+    ratios = zeros(ComplexF64, n, n) .+ 0.85             # Make sure this is broadcasted.
+    ratios[Int(n/4)+1: Int(3n/4), Int(n/4)+1:Int(3n/4)] = ones(Int(n/2), Int(n/2))
+    sol, hop = matrix_conv(n, h, q, m_base, ratios)             # hop is Lap2D, calculated in matrix_conv.
+
+    m_0 = m_base
+    kernel = zeros(ComplexF64, 3, 3);
+    kernel += [[0 -1 0];[-1 4 -1];[0 -1 0]] / h^2 - m_0 .* [[0 0 0];[0 1 0];[0 0 0]];
+    f = () -> fft_conv(kernel, n, 0, q)
+    fft_conv_sol = f()
+    f2 = () -> norm(hop * vec(fft_conv_sol) .- vec(q)) / norm(vec(q))
+    f3 = () -> norm(hop * vec(sol) .- vec(q)) / norm(vec(q))
     display(f2())
-    t = reshape(f(), (n, n))
-    # heatmap(real.(t))
-    # heatmap(reshape(real.(hop\vec(q) - vec(sol)), (n, n)))
-    norm(vec(sol))
+    display(f3())
+    heatmap(real.(vec(fft_conv_sol) - vec(sol)))
+
     return norm(hop\vec(q) - vec(sol)) / norm(hop\vec(q))
 end
+sanity_check()
 
 function whole_process()
     # Need to update to run properly.
@@ -191,8 +198,8 @@ end
 #   3. Min value.
 #   4. Number of iterations.
 #   5. The history of the gmres sequensce. 
-x = fgmres_sequence(q, ratios, m_0s, n, h, m_base, b, pad_green, max_iter=10, restrt=10)
+x = fgmres_sequence(q, ratios, m_0s, n, h, m_base, b, pad_green, 15, 15)
 # x = fgmres_sequence(q, ratios, m_0s, max_iter, restrt)
-size(x[5])
-t1 = x[3]
+# size(x[5])
+# t1 = x[3]
 
