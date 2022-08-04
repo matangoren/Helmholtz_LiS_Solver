@@ -154,7 +154,6 @@ function create_gen_m(m_0s)
 end
 
 function fgmres_sequence(q, ratios, m_0s, n, h, m_base, b, pad_green, max_iter=10, restrt=10)
-    # n, h, m_base, b, pad_green = init_params()
     _ , A = matrix_conv(n, h, q, m_base, ratios)     # A is hop (Helmholtz Operator).
     A_func = x -> A * x
     tol = 1e-6;
