@@ -110,7 +110,7 @@ function sanity_check()
 
     return norm(hop\vec(q) - vec(sol)) / norm(hop\vec(q))
 end
-sanity_check()
+# sanity_check()
 
 function whole_process()
     # Need to update to run properly.
@@ -191,14 +191,13 @@ for i in 1:size(m_0s)[1]
     m_0s[i] = m_0_reals[i] + m_0_ims[i]im
 end
 
+x = fgmres_sequence(q, ratios, m_0s, n, h, m_base, b, pad_green, 15, 15)
 # The output values of fgmres are: 
 #   1. strage long matrix (40K x num of iter).
 #   2. flag (-1 for maxIter reached without converging and -9 for right hand side was zero).
 #   3. Min value.
 #   4. Number of iterations.
 #   5. The history of the gmres sequensce. 
-x = fgmres_sequence(q, ratios, m_0s, n, h, m_base, b, pad_green, 15, 15)
-# x = fgmres_sequence(q, ratios, m_0s, max_iter, restrt)
 # size(x[5])
 # t1 = x[3]
 
