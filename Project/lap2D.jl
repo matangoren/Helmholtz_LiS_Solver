@@ -198,6 +198,13 @@ function linear_m(m_base, ratio, max_iter, restrt)
     return m_0s;
 end
 
+function random_m(m_base, ratio, max_iter, restrt)
+    m_grid = m_base * ratio
+    min_m, max_m = get_value(m_grid, findmin), get_value(m_grid, findmax)
+    return rand(Uniform(real(min_m), real(max_m)), max_iter * restrt) .+ 
+    1im * rand(Uniform(imag(min_m), imag(max_m)), max_iter * restrt);
+end
+
 function avg_m(m_base, ratio, max_iter, restrt)
     m_grid = m_base * ratio
     avg_m = sum(m_grid) / (size(m_grid)[1] * size(m_grid)[2])
@@ -212,7 +219,7 @@ dual_ratio = dual_grid_ratio(0.85, n)
 
 m_0s_linear = linear_m(m_base, dual_ratio, max_iter, restrt)
 m_0s_avg = avg_m(m_base, dual_ratio, max_iter, restrt)
-
+m_0s_rand = random_m(m_base, dual_ratio, max_iter, restrt)
 # The output values of fgmres are: 
 #   1. strage long matrix (40K x num of iter).
 #   2. flag (-1 for maxIter reached without converging and -9 for right hand side was zero).
@@ -222,8 +229,15 @@ m_0s_avg = avg_m(m_base, dual_ratio, max_iter, restrt)
 x = fgmres_sequence(q, dual_ratio, m_0s_linear, n, h, m_base, b, pad_green, max_iter, restrt)
 size(x[5])
 t1 = x[3]
+
 y = fgmres_sequence(q, dual_ratio, m_0s_avg, n, h, m_base, b, pad_green, max_iter, restrt)
 size(y[5])
 t2 = y[3]
 
-t1 - t2
+z = fgmres_sequence(q, dual_ratio, m_0s_rand, n, h, m_base, b, pad_green, max_iter, restrt)
+size(z[5])
+t3 = z[3]
+
+
+
+
