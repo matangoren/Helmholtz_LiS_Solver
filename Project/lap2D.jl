@@ -201,7 +201,7 @@ function avg_m(m_base, ratio, max_iter, restrt)
 end
 
 n, h, m_base, b, pad_green = init_params()
-max_iter, restrt = 10, 10
+max_iter, restrt = 15, 15
 q = rand(ComplexF64, n, n) # + 1im * rand(ComplexF64, n, n)      # Random initializaton.
 
 dual_ratio = dual_grid_ratio(0.85, n)
@@ -215,10 +215,10 @@ m_0s_avg = avg_m(m_base, dual_ratio, max_iter, restrt)
 #   3. Min value.
 #   4. Number of iterations.
 #   5. The history of the gmres sequensce. 
-x = fgmres_sequence(q, dual_ratio, n, h, m_base, pad_green, m_0s_linear, max_iter, restrt)
+x = fgmres_sequence(q, dual_ratio, m_0s_linear, n, h, m_base, b, pad_green, max_iter, restrt)
 size(x[5])
 t1 = x[3]
-y = fgmres_sequence(q, dual_ratio, n, h, m_base, pad_green, m_0s_avg, max_iter, restrt)
+y = fgmres_sequence(q, dual_ratio, m_0s_avg, n, h, m_base, b, pad_green, max_iter, restrt)
 size(y[5])
 t2 = y[3]
 
