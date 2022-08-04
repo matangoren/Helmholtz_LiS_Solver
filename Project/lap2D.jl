@@ -146,8 +146,8 @@ function create_gen_m(m_0s)
     end
 end
 
-function fgmres_sequence(q, ratios, m_0s, max_iter=10, restrt=10)
-    n, h, m_base, b, pad_green = init_params()
+function fgmres_sequence(q, ratios, m_0s, n, h, m_base, b, pad_green, max_iter=10, restrt=10)
+    # n, h, m_base, b, pad_green = init_params()
     _ , A = matrix_conv(n, h, q, m_base, ratios)     # A is hop (Helmholtz Operator).
     A_func = x -> A * x
     tol = 1e-6;
@@ -166,8 +166,7 @@ function get_value(A, operator)
 end
 
 
-n = 200
-h = 2.0/n;
+n, h, m_base, b, pad_green = init_params()
 q = rand(ComplexF64, n, n) # + 1im * rand(ComplexF64, n, n)      # Random initializaton.
 # q = q = zeros(ComplexF64, n, n);                                  # Point source at [n/4, n/4].
 # q[div(n,4), div(n,4)] = 1.0;
@@ -175,7 +174,7 @@ ratios = zeros(ComplexF64, n, n) .+ 0.85             # Make sure this is broadca
 ratios[Int(n/4)+1: Int(3n/4), Int(n/4)+1:Int(3n/4)] = ones(Int(n/2), Int(n/2))
 
 max_iter, restrt = 10, 10
-m_base = (0.1/(h^2))*(1.0 + 1im*0.05)
+# m_base = (0.1/(h^2))*(1.0 + 1im*0.05)
 m_grid = m_base * ratios
 min_m, max_m = get_value(m_grid, findmin), get_value(m_grid, findmax);
 delta = (real(max_m) - real(min_m)) / (max_iter * restrt) + abs(imag(max_m) - imag(min_m))im / (max_iter * restrt);
@@ -192,7 +191,8 @@ end
 #   3. Min value.
 #   4. Number of iterations.
 #   5. The history of the gmres sequensce. 
-x = fgmres_sequence(q, ratios, m_0s, max_iter, restrt)
+x = fgmres_sequence(q, ratios, m_0s, n, h, m_base, b, pad_green, max_iter=10, restrt=10)
+# x = fgmres_sequence(q, ratios, m_0s, max_iter, restrt)
 size(x[5])
 t1 = x[3]
 
