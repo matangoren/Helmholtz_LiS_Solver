@@ -66,7 +66,7 @@ function matrix_conv(n, h, b, m_base, ratios)
     return reshape((Lap2D\b),(n,n)), Lap2D
 end 
 
-function generate_Green(n, kernel, b, pad_green=n)
+function generate_green(n, kernel, b, pad_green)
     # Generate G (Green's function - solution for a single source in the middle of the grid).
     temp = fft_conv(kernel, n, pad_green, b);
     # heatmap(real.(temp))
@@ -111,37 +111,34 @@ function whole_process()
     q = zeros(ComplexF64, n, n);                                  # Point source at [n/4, n/4].
     q[div(n,4), div(n,4)] = 1.0;
     init_params()
-    g_temp = generate_Green(n, kernel, pad)
+    g_temp = generate_green(n, kernel, b, pad_green)
     sol = solve_helm(n, q, g_temp)
 end
 
-function M(n, q, g_temp, kernel)
+function get_M(n, q, g_temp, kernel)
     # Generate the Greens function, if didn't get it as param.
     if isempty(g_temp)
-        g_temp = generate_Green(n, kernel, pad)
+        g_temp = generate_green(n, kernel, b, pad_green)
     end
     # Solve the system
+    q = reshape(q, (n, n))
     sol = solve_helm(n, q:: Matrix{ComplexF64}, g_temp)
     return sol[:]
 end
 
-function M_temp_m(n, h, m, q, b, pad_green)
-    kernel = zeros(ComplexF64, 3, 3);
-    kernel += [[0 -1 0];[-1 4 -1];[0 -1 0]] / h^2 - m .* [[0 0 0];[0 1 0];[0 0 0]];
-    g_temp = generate_Green(n, kernel, b, pad_green)
-    return M(n, q, g_temp, kernel)
-end
-
-function M_temp_gen(q, n, h, m_g, b, pad_green)
+function M_gen(q, n, h, m_g, b, pad_green)
     try
         m = take!(m_g)
-        return M_temp_m(n, h, m, q, b, pad_green)
+        kernel = zeros(ComplexF64, 3, 3);
+        kernel += [[0 -1 0];[-1 4 -1];[0 -1 0]] / h^2 - m .* [[0 0 0];[0 1 0];[0 0 0]];
+        g_temp = generate_green(n, kernel, b, pad_green)
+        return get_M(n, q, g_temp, kernel)
     catch e
         println("Some problem occured in M_temp_gen!")
     end
 end
 
-function m_gen(m_0s)
+function create_gen_m(m_0s)
     Channel() do ch2
         for j in 1:size(m_0s)[1]
             put!(ch2, m_0s[j])
@@ -154,11 +151,10 @@ function fgmres_sequence(q, ratios, m_0s, max_iter=10, restrt=10)
     _ , A = matrix_conv(n, h, q, m_base, ratios)     # A is hop (Helmholtz Operator).
     A_func = x -> A * x
     tol = 1e-6;
-    m_g = m_gen(m_0s)
-    M_ = q -> M_temp_gen(q, n, h, m_g, b, pad_green)
+    m_g = create_gen_m(m_0s)
+    M = q -> M_gen(q, n, h, m_g, b, pad_green)
     # test printing and behaviour for early stopping
-    xtt = fgmres(A_func, q[:], restrt, tol=tol, maxIter=max_iter, M=M_, 
-    out=2, storeInterm=true)
+    xtt = fgmres(A_func, q[:], restrt, tol=tol, maxIter=max_iter, M=M, out=2, storeInterm=true)
     return xtt
 end
 
@@ -169,6 +165,9 @@ function get_value(A, operator)
     return A[i,j];
 end
 
+
+n = 200
+h = 2.0/n;
 q = rand(ComplexF64, n, n) # + 1im * rand(ComplexF64, n, n)      # Random initializaton.
 # q = q = zeros(ComplexF64, n, n);                                  # Point source at [n/4, n/4].
 # q[div(n,4), div(n,4)] = 1.0;
@@ -177,7 +176,7 @@ ratios[Int(n/4)+1: Int(3n/4), Int(n/4)+1:Int(3n/4)] = ones(Int(n/2), Int(n/2))
 
 max_iter, restrt = 10, 10
 m_base = (0.1/(h^2))*(1.0 + 1im*0.05)
-m_grid = m * ratios
+m_grid = m_base * ratios
 min_m, max_m = get_value(m_grid, findmin), get_value(m_grid, findmax);
 delta = (real(max_m) - real(min_m)) / (max_iter * restrt) + abs(imag(max_m) - imag(min_m))im / (max_iter * restrt);
 m_0_reals = collect((i for i in real(min_m):real(delta):real(max_m)))
@@ -186,7 +185,14 @@ m_0s = zeros(ComplexF64, size(m_0_reals)[1])
 for i in 1:size(m_0s)[1]
     m_0s[i] = m_0_reals[i] + m_0_ims[i]im
 end
-# m_g = m_gen(m_0s)
-fgmres_sequence(q, ratios, m_0s, max_iter, restrt)
 
+# The output values of fgmres are: 
+#   1. strage long matrix (40K x num of iter).
+#   2. flag (-1 for maxIter reached without converging and -9 for right hand side was zero).
+#   3. Min value.
+#   4. Number of iterations.
+#   5. The history of the gmres sequensce. 
+x = fgmres_sequence(q, ratios, m_0s, max_iter, restrt)
+size(x[5])
+t1 = x[3]
 
