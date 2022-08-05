@@ -165,6 +165,8 @@ function fgmres_sequence(q, ratios, m_0s, n, h, m_base, b, pad_green, max_iter=1
     M = q -> M_gen(q, n, h, m_g, b, pad_green)
     # test printing and behaviour for early stopping
     xtt = fgmres(A_func, q[:], restrt, tol=tol, maxIter=max_iter, M=M, out=2, storeInterm=true)
+    # @printf "Amount of iterations: %d\n" size(xtt[5])
+    # @printf "Last residual norm: %f" xtt[3]
     return xtt
 end
 
@@ -211,33 +213,37 @@ function avg_m(m_base, ratio, max_iter, restrt)
     return avg_m * ones(ComplexF64, max_iter * restrt);
 end
 
+function gaussian_m(m_base, ratio, max_iter, restrt)
+    d = fit(Normal, real.(ratio[:]))
+    samples = rand(d, max_iter * restrt)
+    return m_base * samples
+end
+
 n, h, m_base, b, pad_green = init_params()
 max_iter, restrt = 15, 15
 q = rand(ComplexF64, n, n) # + 1im * rand(ComplexF64, n, n)      # Random initializaton.
-
 dual_ratio = dual_grid_ratio(0.85, n)
 
-m_0s_linear = linear_m(m_base, dual_ratio, max_iter, restrt)
+
 m_0s_avg = avg_m(m_base, dual_ratio, max_iter, restrt)
-m_0s_rand = random_m(m_base, dual_ratio, max_iter, restrt)
+fgmres_sequence(q, dual_ratio, m_0s_avg, n, h, m_base, b, pad_green, max_iter, restrt)
+
+m_0s_gaussian = gaussian_m(m_base, dual_ratio, max_iter, restrt)
+fgmres_sequence(q, dual_ratio, m_0s_gaussian, n, h, m_base, b, pad_green, max_iter, restrt)
+
+# m_0s_linear = linear_m(m_base, dual_ratio, max_iter, restrt)
+# fgmres_sequence(q, dual_ratio, m_0s_linear, n, h, m_base, b, pad_green, max_iter, restrt)
+
+# m_0s_rand = random_m(m_base, dual_ratio, max_iter, restrt)
+# fgmres_sequence(q, dual_ratio, m_0s_rand, n, h, m_base, b, pad_green, max_iter, restrt)
+
+
 # The output values of fgmres are: 
 #   1. strage long matrix (40K x num of iter).
 #   2. flag (-1 for maxIter reached without converging and -9 for right hand side was zero).
 #   3. Min value.
 #   4. Number of iterations.
 #   5. The history of the gmres sequensce. 
-x = fgmres_sequence(q, dual_ratio, m_0s_linear, n, h, m_base, b, pad_green, max_iter, restrt)
-size(x[5])
-t1 = x[3]
-
-y = fgmres_sequence(q, dual_ratio, m_0s_avg, n, h, m_base, b, pad_green, max_iter, restrt)
-size(y[5])
-t2 = y[3]
-
-z = fgmres_sequence(q, dual_ratio, m_0s_rand, n, h, m_base, b, pad_green, max_iter, restrt)
-size(z[5])
-t3 = z[3]
-
 
 
 
