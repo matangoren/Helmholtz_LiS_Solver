@@ -1,4 +1,4 @@
-using PyPlot
+# using PyPlot
 using Plots
 using FFTW
 using SparseArrays
@@ -6,10 +6,10 @@ using LinearAlgebra
 using Images, FileIO
 using KrylovMethods
 using Printf
-using Random
-using Distributions
+include("auxiliary.jl");
 
 Random.seed!(1234);
+
 
 In = (n::Int64)->(return spdiagm(0=>ones(ComplexF64, n)));
 
@@ -17,7 +17,7 @@ function init_params()
     n = 200;
     h = 2.0/n;
     m_base = (0.1/(h^2))*(1.0 + 1im*0.05)         # m = k^2. In this case it is constant through space (x).
-    
+
     # Define a point-source in the middle of the grid.
     b = zeros(ComplexF64, n, n);
     b[div(n,2), div(n,2)] = 1.0;
@@ -114,7 +114,6 @@ function sanity_check()
 
     return norm(hop\vec(q) - vec(sol)) / norm(hop\vec(q))
 end
-# sanity_check()
 
 function whole_process()
     # Need to update to run properly.
@@ -145,7 +144,7 @@ function M_gen(q, n, h, m_g, b, pad_green)
         g_temp = generate_green(n, kernel, b, pad_green)
         return get_M(n, q, g_temp, kernel)
     catch e
-        println("Some problem occured in M_temp_gen!")
+        println("Some problem occured in M_gen!")
     end
 end
 
@@ -157,6 +156,12 @@ function create_gen_m(m_0s)
     end
 end
 
+# The output values of fgmres are: 
+#   1. strage long matrix (40K x num of iter).
+#   2. flag (-1 for maxIter reached without converging and -9 for right hand side was zero).
+#   3. Min value.
+#   4. Number of iterations.
+#   5. The history of the gmres sequensce. 
 function fgmres_sequence(q, ratios, m_0s, n, h, m_base, b, pad_green, max_iter=10, restrt=10)
     _ , A = matrix_conv(n, h, q, m_base, ratios)     # A is hop (Helmholtz Operator).
     A_func = x -> A * x
@@ -164,86 +169,54 @@ function fgmres_sequence(q, ratios, m_0s, n, h, m_base, b, pad_green, max_iter=1
     m_g = create_gen_m(m_0s)
     M = q -> M_gen(q, n, h, m_g, b, pad_green)
     # test printing and behaviour for early stopping
-    xtt = fgmres(A_func, q[:], restrt, tol=tol, maxIter=max_iter, M=M, out=2, storeInterm=true)
-    # @printf "Amount of iterations: %d\n" size(xtt[5])
-    # @printf "Last residual norm: %f" xtt[3]
-    return xtt
-end
-
-function get_value(A, operator)
-    _, indices = operator(norm.(A))
-    i = indices[1]
-    j = indices[2]
-    return A[i,j];
-end
-
-function dual_grid_ratio(p, n)
-    ratios = zeros(ComplexF64, n, n) .+ p
-    ratios[Int(n/4)+1: Int(3n/4), Int(n/4)+1:Int(3n/4)] = ones(Int(n/2), Int(n/2))
-    return ratios;
-end
-
-function const_grid_ratio(n) 
-    return  ones(ComplexF64, n, n);
-end
-
-function linear_m(m_base, ratio, max_iter, restrt)
-    m_grid = m_base * ratio
-    min_m, max_m = get_value(m_grid, findmin), get_value(m_grid, findmax);
-    delta = (real(max_m) - real(min_m)) / (max_iter * restrt) + abs(imag(max_m) - imag(min_m))im / (max_iter * restrt);
-    m_0_reals = collect((i for i in real(min_m):real(delta):real(max_m)))
-    m_0_ims = collect((i for i in imag(min_m):imag(delta):imag(max_m)))
-    m_0s = zeros(ComplexF64, size(m_0_reals)[1])
-    for i in 1:size(m_0s)[1]
-        m_0s[i] = m_0_reals[i] + m_0_ims[i]im
+    try
+        xtt = fgmres(A_func, q[:], restrt, tol=tol, maxIter=max_iter, M=M, out=2, storeInterm=true)
+        return xtt
+    catch e
+        println("Probably reached the maximal number of iterations without converging!")
     end
-    return m_0s;
 end
 
-function random_m(m_base, ratio, max_iter, restrt)
-    m_grid = m_base * ratio
-    min_m, max_m = get_value(m_grid, findmin), get_value(m_grid, findmax)
-    return rand(Uniform(real(min_m), real(max_m)), max_iter * restrt) .+ 
-    1im * rand(Uniform(imag(min_m), imag(max_m)), max_iter * restrt);
-end
 
-function avg_m(m_base, ratio, max_iter, restrt)
-    m_grid = m_base * ratio
-    avg_m = sum(m_grid) / (size(m_grid)[1] * size(m_grid)[2])
-    return avg_m * ones(ComplexF64, max_iter * restrt);
-end
 
-function gaussian_m(m_base, ratio, max_iter, restrt)
-    d = fit(Normal, real.(ratio[:]))
-    samples = rand(d, max_iter * restrt)
-    return m_base * samples
-end
 
 n, h, m_base, b, pad_green = init_params()
-max_iter, restrt = 15, 15
+max_iter, restrt = 20, 20
 q = rand(ComplexF64, n, n) # + 1im * rand(ComplexF64, n, n)      # Random initializaton.
+
 dual_ratio = dual_grid_ratio(0.85, n)
+random_ratio = random_grid_ratio(n)
 
+m_0s_linear = linear_m(m_base, random_ratio, max_iter, restrt)
+m_0s_avg = avg_m(m_base, random_ratio, max_iter, restrt)
+m_0s_rand = random_m(m_base, random_ratio, max_iter, restrt)
+m_0s_gaussian = gaussian_m(m_base, random_ratio, max_iter, restrt)
+m_0s_monte_carlo = monte_carlo_m(m_base, random_ratio, max_iter, restrt)
+m_0s_minmax = min_max_m(m_base, random_ratio, max_iter, restrt)
 
-m_0s_avg = avg_m(m_base, dual_ratio, max_iter, restrt)
-fgmres_sequence(q, dual_ratio, m_0s_avg, n, h, m_base, b, pad_green, max_iter, restrt)
+x = fgmres_sequence(q, random_ratio, m_0s_linear, n, h, m_base, b, pad_green, max_iter, restrt)
+size(x[5])
+t1 = x[3]
 
-m_0s_gaussian = gaussian_m(m_base, dual_ratio, max_iter, restrt)
-fgmres_sequence(q, dual_ratio, m_0s_gaussian, n, h, m_base, b, pad_green, max_iter, restrt)
+y = fgmres_sequence(q, random_ratio, m_0s_avg, n, h, m_base, b, pad_green, max_iter, restrt)
+size(y[5])
+t2 = y[3]
 
-# m_0s_linear = linear_m(m_base, dual_ratio, max_iter, restrt)
-# fgmres_sequence(q, dual_ratio, m_0s_linear, n, h, m_base, b, pad_green, max_iter, restrt)
+z = fgmres_sequence(q, random_ratio, m_0s_minmax, n, h, m_base, b, pad_green, max_iter, restrt)
+size(z[5])
+t3 = z[3]
 
-# m_0s_rand = random_m(m_base, dual_ratio, max_iter, restrt)
-# fgmres_sequence(q, dual_ratio, m_0s_rand, n, h, m_base, b, pad_green, max_iter, restrt)
+w = fgmres_sequence(q, random_ratio, m_0s_gaussian, n, h, m_base, b, pad_green, max_iter, restrt)
+size(w[5])
+t4 = w[3]  
 
+a = fgmres_sequence(q, random_ratio, m_0s_monte_carlo, n, h, m_base, b, pad_green, max_iter, restrt)
+size(a[5])
+t5 = a[3]  
 
-# The output values of fgmres are: 
-#   1. strage long matrix (40K x num of iter).
-#   2. flag (-1 for maxIter reached without converging and -9 for right hand side was zero).
-#   3. Min value.
-#   4. Number of iterations.
-#   5. The history of the gmres sequensce. 
+b = fgmres_sequence(q, random_ratio, m_0s_rand, n, h, m_base, b, pad_green, max_iter, restrt)
+size(b[5])
+t6 = b[3]  
 
 
 
