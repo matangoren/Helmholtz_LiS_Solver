@@ -9,10 +9,22 @@ function dual_grid_ratio(p, n)
     return ratios;
 end
 
-function tripel_grid_ratio(p1, p2, n)
+function triple_grid_ratio(p1, p2, n)
     ratios = zeros(ComplexF64, n, n) .+ p1
-    ratios[Int(n/6)+1: Int(n/4), Int(n/6)+1:Int(n/4)] .= p2
-    ratios[Int(n/4)+1: Int(3n/4), Int(n/4)+1:Int(3n/4)] = ones(Int(n/2), Int(n/2))
+    ratios[div(2n,12)+1: div(10n,12), div(2n,12)+1:div(10n,12)] .= p2 
+    ratios[div(5n,12)+1: div(7n,12), div(5n,12)+1:div(7n,12)] .= 1
+    return ratios;
+end
+
+function octagon_grid_ratio(p1, p2, p3, p4, p5, p6, p7, p8, n)
+    ratios = zeros(ComplexF64, n, n) .+ p1
+    ratios[div(2n,16)+1: div(15n,16), div(2n,16)+1: div(15n,16)] .= p2
+    ratios[div(3n,16)+1: div(14n,16), div(3n,16)+1:div(14n,16)] .= p3 
+    ratios[div(4n,16)+1: div(13n,16), div(4n,16)+1:div(13n,16)] .= p4 
+    ratios[div(5n,16)+1: div(12n,16), div(5n,16)+1:div(12n,16)] .= p5 
+    ratios[div(6n,16)+1: div(11n,16), div(6n,16)+1:div(11n,16)] .= p6 
+    ratios[div(7n,16)+1: div(10n,16), div(7n,16)+1:div(10n,16)] .= p7
+    ratios[div(8n,16)+1: div(9n,16), div(8n,16)+1:div(9n,16)] .= p8 
     return ratios;
 end
 

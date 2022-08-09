@@ -174,6 +174,7 @@ function fgmres_sequence(q, ratios, m_0s, n, h, m_base, b, pad_green, max_iter=1
         return xtt
     catch e
         println("Probably reached the maximal number of iterations without converging!")
+        return [-1 -1 -1 -1 -1]
     end
 end
 
@@ -181,62 +182,59 @@ end
 
 
 n, h, m_base, b, pad_green = init_params()
-max_iter, restrt = 20, 20
+max_iter, restrt = 15, 15
 q = rand(ComplexF64, n, n) # + 1im * rand(ComplexF64, n, n)      # Random initializaton.
 
 dual_ratio = dual_grid_ratio(0.5, n)
 random_ratio = random_grid_ratio(n)
 delta_ratio = delta_grid_ratio(500, n)
+triple_ratio = triple_grid_ratio(0.5,0.8,n)
+octa_ratio = octagon_grid_ratio(0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,n)
 
-m_0s_linear = linear_m(m_base, random_ratio, max_iter, restrt)
+m_0s_linear = linear_m(m_base, octa_ratio, max_iter, restrt)
 # m_0s_avg = avg_m(m_base, dual_ratio, max_iter, restrt)
-m_0s_avg = avg_m(m_base, random_ratio, max_iter, restrt)
-m_0s_rand = random_min_max_m(m_base, random_ratio, max_iter, restrt)
-m_0s_gaussian = gaussian_m(m_base, random_ratio, max_iter, restrt)
-m_0s_monte_carlo = monte_carlo_m(m_base, random_ratio, max_iter, restrt)
-m_0s_minmax = min_max_m(m_base, random_ratio, max_iter, restrt)
+m_0s_avg = avg_m(m_base, octa_ratio, max_iter, restrt)
+m_0s_rand = random_min_max_m(m_base, octa_ratio, max_iter, restrt)
+m_0s_gaussian = gaussian_m(m_base, octa_ratio, max_iter, restrt)
+m_0s_monte_carlo = monte_carlo_m(m_base, octa_ratio, max_iter, restrt)
+m_0s_minmax = min_max_m(m_base, octa_ratio, max_iter, restrt)
 # m_0s_mc = monte_carlo_m(m_base, dual_ratio, max_iter, restrt)
-m_0s_mc = monte_carlo_m(m_base, random_ratio, max_iter, restrt)
+m_0s_mc = monte_carlo_m(m_base, octa_ratio, max_iter, restrt)
 # m_0s_rand_no_rep = random_rep_m(m_base, dual_ratio, max_iter, restrt)
-m_0s_rand_no_rep = random_rep_m(m_base, random_ratio, max_iter, restrt)
+m_0s_rand_no_rep = random_rep_m(m_base, octa_ratio, max_iter, restrt)
 
-y = fgmres_sequence(q, random_ratio, m_0s_avg, n, h, m_base, b, pad_green, max_iter, restrt)
+y = fgmres_sequence(q, octa_ratio, m_0s_avg, n, h, m_base, b, pad_green, max_iter, restrt)
 size(y[5])
 t2 = y[3]
 
-x = fgmres_sequence(q, random_ratio, m_0s_linear, n, h, m_base, b, pad_green, max_iter, restrt)
+x = fgmres_sequence(q, octa_ratio, m_0s_linear, n, h, m_base, b, pad_green, max_iter, restrt)
 size(x[5])
 t1 = x[3]
 
-z = fgmres_sequence(q, random_ratio, m_0s_minmax, n, h, m_base, b, pad_green, max_iter, restrt)
+z = fgmres_sequence(q, octa_ratio, m_0s_minmax, n, h, m_base, b, pad_green, max_iter, restrt)
 size(z[5])
 t3 = z[3]
 
-w = fgmres_sequence(q, random_ratio, m_0s_gaussian, n, h, m_base, b, pad_green, max_iter, restrt)
+w = fgmres_sequence(q, octa_ratio, m_0s_gaussian, n, h, m_base, b, pad_green, max_iter, restrt)
 size(w[5])
 t4 = w[3]  
 
-a = fgmres_sequence(q, random_ratio, m_0s_monte_carlo, n, h, m_base, b, pad_green, max_iter, restrt)
+a = fgmres_sequence(q, octa_ratio, m_0s_monte_carlo, n, h, m_base, b, pad_green, max_iter, restrt)
 size(a[5])
 t5 = a[3]  
 
-b = fgmres_sequence(q, random_ratio, m_0s_rand, n, h, m_base, b, pad_green, max_iter, restrt)
+b = fgmres_sequence(q, octa_ratio, m_0s_rand, n, h, m_base, b, pad_green, max_iter, restrt)
 size(b[5])
 t6 = b[3]  
 
-r = fgmres_sequence(q, dual_ratio, m_0s_avg, n, h, m_base, b, pad_green, max_iter, restrt)
+r = fgmres_sequence(q, octa_ratio, m_0s_avg, n, h, m_base, b, pad_green, max_iter, restrt)
 size(r[5])
 t7 = r[3]
 
-k = fgmres_sequence(q, random_ratio, m_0s_mc, n, h, m_base, b, pad_green, max_iter, restrt)
+k = fgmres_sequence(q, octa_ratio, m_0s_mc, n, h, m_base, b, pad_green, max_iter, restrt)
 size(k[5])
 t8 = k[3]
 
-k_rand = fgmres_sequence(q, random_ratio, m_0s_rand_no_rep, n, h, m_base, b, pad_green, max_iter, restrt)
-size(k_avg[5])
-t8 = k_avg[3]
-
-
-
-temp = tripel_grid_ratio(0.3,0.6,200)
-heatmap(real(temp))
+k_rand = fgmres_sequence(q, octa_ratio, m_0s_rand_no_rep, n, h, m_base, b, pad_green, max_iter, restrt)
+size(k_rand[5])
+t8 = k_rand[3]
