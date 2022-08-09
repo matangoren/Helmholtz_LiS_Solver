@@ -11,7 +11,7 @@ end
 
 function tripel_grid_ratio(p1, p2, n)
     ratios = zeros(ComplexF64, n, n) .+ p1
-    ratios[Int(n/4)+1: Int(3n/4), Int(n/4)+1:Int(3n/4)] .= p2
+    ratios[Int(n/6)+1: Int(n/4), Int(n/6)+1:Int(n/4)] .= p2
     ratios[Int(n/4)+1: Int(3n/4), Int(n/4)+1:Int(3n/4)] = ones(Int(n/2), Int(n/2))
     return ratios;
 end
@@ -24,6 +24,17 @@ function random_grid_ratio(n)
     return rand(n, n)
 end
 
+function delta_grid_ratio(p, n)
+    ratios = ones(ComplexF64, n, n)
+    ratios[Int(n/2), Int(n/2)] *= p
+    return ratios;
+end
+
+function mc_grid_ratio(mu, sigma, n)
+    d = Normal(mu, sigma)
+    ratios = rand(d, n, n)
+    return ratios
+end
 
 # m(x,y) Initialization
 function linear_m(m_base, ratio, max_iter, restrt)
@@ -39,16 +50,21 @@ function linear_m(m_base, ratio, max_iter, restrt)
     return m_0s;
 end
 
-function random_m(m_base, ratio, max_iter, restrt)
+function random_min_max_m(m_base, ratio, max_iter, restrt)
     m_grid = m_base * ratio
     min_m, max_m = get_value(m_grid, findmin), get_value(m_grid, findmax)
     return rand(Uniform(real(min_m), real(max_m)), max_iter * restrt) .+ 
     1im * rand(Uniform(imag(min_m), imag(max_m)), max_iter * restrt);
 end
 
-function monte_carlo_m(m_base, ratio, max_iter, restrt)
+function random_rep_m(m_base, ratio, max_iter, restrt)
     m_grid = m_base * ratio
     return sample(m_grid[:], max_iter * restrt, replace = false)
+end
+
+function monte_carlo_m(m_base, ratio, max_iter, restrt)
+    m_grid = m_base * ratio
+    return sample(m_grid[:], max_iter * restrt)
 end
 
 function avg_m(m_base, ratio, max_iter, restrt)
