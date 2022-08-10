@@ -3,16 +3,31 @@ using Distributions
 using StatsBase
 
 # Grid ratio initialization
+"""
+return grid with two different intencities.
+"""
 function dual_grid_ratio(p, n)
     ratios = zeros(ComplexF64, n, n) .+ p
     ratios[Int(n/4)+1: Int(3n/4), Int(n/4)+1:Int(3n/4)] = ones(Int(n/2), Int(n/2))
     return ratios;
 end
 
-function tripel_grid_ratio(p1, p2, n)
+function triple_grid_ratio(p1, p2, n)
     ratios = zeros(ComplexF64, n, n) .+ p1
-    ratios[Int(n/6)+1: Int(n/4), Int(n/6)+1:Int(n/4)] .= p2
-    ratios[Int(n/4)+1: Int(3n/4), Int(n/4)+1:Int(3n/4)] = ones(Int(n/2), Int(n/2))
+    ratios[div(2n,12)+1: div(10n,12), div(2n,12)+1:div(10n,12)] .= p2 
+    ratios[div(5n,12)+1: div(7n,12), div(5n,12)+1:div(7n,12)] .= 1
+    return ratios;
+end
+
+function octagon_grid_ratio(p1, p2, p3, p4, p5, p6, p7, p8, n)
+    ratios = zeros(ComplexF64, n, n) .+ p1
+    ratios[div(2n,16)+1: div(15n,16), div(2n,16)+1: div(15n,16)] .= p2
+    ratios[div(3n,16)+1: div(14n,16), div(3n,16)+1:div(14n,16)] .= p3 
+    ratios[div(4n,16)+1: div(13n,16), div(4n,16)+1:div(13n,16)] .= p4 
+    ratios[div(5n,16)+1: div(12n,16), div(5n,16)+1:div(12n,16)] .= p5 
+    ratios[div(6n,16)+1: div(11n,16), div(6n,16)+1:div(11n,16)] .= p6 
+    ratios[div(7n,16)+1: div(10n,16), div(7n,16)+1:div(10n,16)] .= p7
+    ratios[div(8n,16)+1: div(9n,16), div(8n,16)+1:div(9n,16)] .= p8 
     return ratios;
 end
 
@@ -24,13 +39,39 @@ function random_grid_ratio(n)
     return rand(n, n)
 end
 
+"""
+n - grid size (n X n matrix)
+p - intencity of delta
+return a grid with a delta in the center of the grids.
+"""
 function delta_grid_ratio(p, n)
     ratios = ones(ComplexF64, n, n)
     ratios[Int(n/2), Int(n/2)] *= p
     return ratios;
 end
 
-function mc_grid_ratio(mu, sigma, n)
+"""
+num - number of deltas
+p - intencity of delta
+n - grid size (n X n matrix)
+returns a grid with num deltas.
+"""
+function deltas_grid_ratio(num, p, n)
+    if num > n * n
+        num = n * n
+    end
+    indices = sample(1:n * n, num, replace = false)
+    ratios = ones(ComplexF64, n * n)
+    for i in 1:num
+        ratios[indices[i]] *= p
+    end
+    return reshape(ratios, n, n);
+end
+
+"""
+return a grid with gaussian distribution.
+"""
+function gaussian_grid_ratio(mu, sigma, n)
     d = Normal(mu, sigma)
     ratios = rand(d, n, n)
     return ratios
@@ -57,11 +98,19 @@ function random_min_max_m(m_base, ratio, max_iter, restrt)
     1im * rand(Uniform(imag(min_m), imag(max_m)), max_iter * restrt);
 end
 
-function random_rep_m(m_base, ratio, max_iter, restrt)
+"""
+return an array with size of max_iter * restrt,
+containing random valuse from ratio without repetitions.
+"""
+function random_no_rep_m(m_base, ratio, max_iter, restrt)
     m_grid = m_base * ratio
     return sample(m_grid[:], max_iter * restrt, replace = false)
 end
 
+"""
+return an array with size of max_iter * restrt,
+elements are taken from ratio with repetitions.
+"""
 function monte_carlo_m(m_base, ratio, max_iter, restrt)
     m_grid = m_base * ratio
     return sample(m_grid[:], max_iter * restrt)
