@@ -81,12 +81,12 @@ function generate_green(n, kernel, b, pad_green)
     return g_temp
 end
 
-function solve_helm(n, q:: Matrix{ComplexF64}, g_temp)
+function solve_helm(n, q:: Matrix{ComplexF64}, green)
     q_pad = zeros(ComplexF64,2n,2n)
     q_pad[Int(n/2)+1:Int(3n/2),Int(n/2)+1:Int(3n/2)] .= q
     
     # Perform the convolution of the Green's function with the source.
-    sol = ifft(fft(g_temp) .* fft(q_pad))
+    sol = ifft(fft(green) .* fft(q_pad))
     sol = sol[Int(n/2)+1:Int(3n/2),Int(n/2)+1:Int(3n/2)]
     # heatmap(real.(sol))
     return sol
