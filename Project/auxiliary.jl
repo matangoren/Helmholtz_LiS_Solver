@@ -125,8 +125,10 @@ end
 
 function gaussian_m(m_base, ratio, max_iter, restrt)
     d = fit(Normal, real.(ratio[:]))
-    samples = rand(d, max_iter * restrt)
-    return m_base * samples
+    lo, hi = quantile.(d, [0.48, 0.52])
+    x = range(lo, hi; length = max_iter * restrt)
+    # samples = pdf.(d, x)
+    return m_base * x
 end
 
 function min_max_m(m_base, ratio, max_iter, restrt)

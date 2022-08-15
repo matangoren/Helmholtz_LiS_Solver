@@ -200,49 +200,30 @@ n, h, m_base, b, pad_green = init_params()
 max_iter, restrt = 12, 12
 q = rand(ComplexF64, n, n) # + 1im * rand(ComplexF64, n, n)      # Random initializaton.
 
-dual_ratio = dual_grid_ratio(0.75, n)
+dual_ratio = dual_grid_ratio(0.5, n)
 random_ratio = random_grid_ratio(n)
 delta_ratio = delta_grid_ratio(500, n)
 triple_ratio = triple_grid_ratio(0.5,0.8,n)
 octa_ratio = octagon_grid_ratio(0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,n)
-deltas_ratio = deltas_grid_ratio(200, 1000, 1, n)
+deltas_ratio = deltas_grid_ratio(200, 500, 1, n)
+gaussian_ratio = gaussian_grid_ratio(5,2,n)
 
 
 # m_0s_linear = linear_m(m_base, deltas_ratio, max_iter, restrt)
 # m_0s_avg = avg_m(m_base, dual_ratio, max_iter, restrt)
 # m_0s_avg = avg_m(m_base, dual_ratio, max_iter, restrt)
 # m_0s_rand = random_min_max_m(m_base, deltas_ratio, max_iter, restrt)
-# m_0s_gaussian = gaussian_m(m_base, deltas_ratio, max_iter, restrt)
+# m_0s_gaussian = gaussian_m(m_base, dual_ratio, max_iter, restrt)
 # m_0s_monte_carlo = monte_carlo_m(m_base, deltas_ratio, max_iter, restrt)
 # m_0s_minmax = min_max_m(m_base, dual_ratio, max_iter, restrt)
 # m_0s_rand_no_rep = random_rep_m(m_base, dual_ratio, max_iter, restrt)
 # m_0s_rand_no_rep = random_no_rep_m(m_base, deltas_ratio, max_iter, restrt)
 
-# y = fgmres_sequence(q, dual_ratio, m_0s_minmax, n, h, m_base, b, pad_green, max_iter, restrt)
-# size(y[5]) == ()
+# y = fgmres_sequence(q, dual_ratio, m_0s_avg, n, h, m_base, b, pad_green, max_iter, restrt)
+# size(y[5])
 # t2 = y[3]
 
-test_fgmres(m_base, dual_ratio, "dual grid", max_iter, restrt, n, h, b, pad_green, q)
+test_fgmres(m_base, gaussian_ratio, "dual grid", max_iter, restrt, n, h, b, pad_green, q)
 
 # out = heatmap(real(octa_ratio))
 # save("Project\\figures\\octa grid ratio.png", out)
-
-
-m_0s_names123 = Dict(1 => "avg_m", 2 => "linear_m", 3 => "random_min_max_m", 4 => "gaussian_m", 5 => "min_max_m", 6 => "monte_carlo_m", 7 => "random_no_rep_m")
-res123 = []
-push!(res123, (5,11, 11.123745))
-push!(res123, (1,13, 14.12367455))
-push!(res123, (3,11, 11.122745))
-
-sort!(res123, by=(x) -> (x[2],x[3]))
-
-print_result(res123, m_0s_names123, "test123")
-temp = (1,2,3)
-a,b,c = temp
-
-s = ""
-for (i, (j,num_of_iteration,val)) in enumerate(res123)
-    # j,num_of_iteration,val = r
-    s = @sprintf "%s%d. %-20s ---> Number of iteration: %d | Value: %0.3e\n" s i "test" num_of_iteration val
-end
-@printf "%s" s
