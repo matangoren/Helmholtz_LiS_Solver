@@ -8,7 +8,7 @@ using KrylovMethods
 using Printf
 include("auxiliary.jl");
 
-Random.seed!(1234);
+# Random.seed!(1234);
 
 
 In = (n::Int64)->(return spdiagm(0=>ones(ComplexF64, n)));
@@ -72,21 +72,21 @@ end
 
 function generate_green(n, kernel, b, pad_green)
     # Generate G (Green's function - solution for a single source in the middle of the grid).
-    temp = fft_conv(kernel, n, pad_green, b);
-    # heatmap(real.(temp))
-    g_temp = temp[Int(n/2):Int(5n/2)-1,Int(n/2):Int(5n/2)-1]
-    # heatmap(real.(g_temp))
-    g_temp = fftshift(g_temp)
-    # heatmap(real.(g_temp))
-    return g_temp
+    green = fft_conv(kernel, n, pad_green, b);
+    # heatmap(real.(green))
+    green = green[Int(n/2):Int(5n/2)-1,Int(n/2):Int(5n/2)-1]
+    # heatmap(real.(green))
+    green = fftshift(green)
+    # heatmap(real.(green))
+    return green
 end
 
-function solve_helm(n, q:: Matrix{ComplexF64}, g_temp)
+function solve_helm(n, q:: Matrix{ComplexF64}, green)
     q_pad = zeros(ComplexF64,2n,2n)
     q_pad[Int(n/2)+1:Int(3n/2),Int(n/2)+1:Int(3n/2)] .= q
     
     # Perform the convolution of the Green's function with the source.
-    sol = ifft(fft(g_temp) .* fft(q_pad))
+    sol = ifft(fft(green) .* fft(q_pad))
     sol = sol[Int(n/2)+1:Int(3n/2),Int(n/2)+1:Int(3n/2)]
     # heatmap(real.(sol))
     return sol
@@ -180,62 +180,69 @@ function fgmres_sequence(q, ratios, m_0s, n, h, m_base, b, pad_green, max_iter=1
     end
 end
 
+function test_fgmres(m_base, ratio, grid_name, max_iter, restrt, n, h, b, pad_green, q)
+    res = []
+    m_0s_names = Dict(1 => "Avarage m", 2 => "Linear m", 3 => "Random min-max m", 4 => "Gaussian m", 5 => "Alternatig min-max m", 6 => "Monte Carlo m", 7 => "Random without repetitions m")
+    m_0s_methods = [avg_m, linear_m, random_min_max_m, gaussian_m, min_max_m, monte_carlo_m, random_no_rep_m]
+    make_m_0s = (m_0_method, ratio) -> m_0_method(m_base, ratio, max_iter, restrt)
+    for (i,method) in enumerate(m_0s_methods)
+        println(m_0s_names[i])
+        m_0s = make_m_0s(method, ratio)
+        r = fgmres_sequence(q, ratio, m_0s, n, h, m_base, b, pad_green, max_iter, restrt)
+        num_of_iter = size(r[5]) == () ? (Inf) : size(r[5])
+        push!(res, (i,num_of_iter[1], r[3]))
+    end
+    sort!(res, by=(x) -> (x[2],x[3]))
+    print_result(res, m_0s_names, grid_name)
+end
 
 n, h, m_base, b, pad_green = init_params()
-max_iter, restrt = 15, 15
+max_iter, restrt = 12, 12
 q = rand(ComplexF64, n, n) # + 1im * rand(ComplexF64, n, n)      # Random initializaton.
 
-dual_ratio = dual_grid_ratio(0.5, n)
+dual_ratio = dual_grid_ratio(0.75, n)
 random_ratio = random_grid_ratio(n)
 delta_ratio = delta_grid_ratio(500, n)
 triple_ratio = triple_grid_ratio(0.5,0.8,n)
 octa_ratio = octagon_grid_ratio(0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,n)
-deltas_ratio = deltas_grid_ratio(10, 500, n)
+deltas_ratio = deltas_grid_ratio(200, 1000, 1, n)
 
-m_0s_linear = linear_m(m_base, deltas_ratio, max_iter, restrt)
+
+# m_0s_linear = linear_m(m_base, deltas_ratio, max_iter, restrt)
 # m_0s_avg = avg_m(m_base, dual_ratio, max_iter, restrt)
-m_0s_avg = avg_m(m_base, deltas_ratio, max_iter, restrt)
-m_0s_rand = random_min_max_m(m_base, deltas_ratio, max_iter, restrt)
-m_0s_gaussian = gaussian_m(m_base, deltas_ratio, max_iter, restrt)
-m_0s_monte_carlo = monte_carlo_m(m_base, deltas_ratio, max_iter, restrt)
-m_0s_minmax = min_max_m(m_base, deltas_ratio, max_iter, restrt)
+# m_0s_avg = avg_m(m_base, dual_ratio, max_iter, restrt)
+# m_0s_rand = random_min_max_m(m_base, deltas_ratio, max_iter, restrt)
+# m_0s_gaussian = gaussian_m(m_base, deltas_ratio, max_iter, restrt)
+# m_0s_monte_carlo = monte_carlo_m(m_base, deltas_ratio, max_iter, restrt)
+# m_0s_minmax = min_max_m(m_base, dual_ratio, max_iter, restrt)
 # m_0s_rand_no_rep = random_rep_m(m_base, dual_ratio, max_iter, restrt)
-m_0s_rand_no_rep = random_no_rep_m(m_base, deltas_ratio, max_iter, restrt)
+# m_0s_rand_no_rep = random_no_rep_m(m_base, deltas_ratio, max_iter, restrt)
 
-y = fgmres_sequence(q, deltas_ratio, m_0s_avg, n, h, m_base, b, pad_green, max_iter, restrt)
-size(y[5])
-t2 = y[3]
+# y = fgmres_sequence(q, dual_ratio, m_0s_minmax, n, h, m_base, b, pad_green, max_iter, restrt)
+# size(y[5]) == ()
+# t2 = y[3]
 
-x = fgmres_sequence(q, deltas_ratio, m_0s_linear, n, h, m_base, b, pad_green, max_iter, restrt)
-size(x[5])
-t1 = x[3]
+test_fgmres(m_base, dual_ratio, "dual grid", max_iter, restrt, n, h, b, pad_green, q)
 
-z = fgmres_sequence(q, deltas_ratio, m_0s_minmax, n, h, m_base, b, pad_green, max_iter, restrt)
-size(z[5])
-t3 = z[3]
-
-w = fgmres_sequence(q, deltas_ratio, m_0s_gaussian, n, h, m_base, b, pad_green, max_iter, restrt)
-size(w[5])
-t4 = w[3]  
-
-a = fgmres_sequence(q, deltas_ratio, m_0s_monte_carlo, n, h, m_base, b, pad_green, max_iter, restrt)
-size(a[5])
-t5 = a[3]  
-
-b = fgmres_sequence(q, deltas_ratio, m_0s_rand, n, h, m_base, b, pad_green, max_iter, restrt)
-size(b[5])
-t6 = b[3]  
-
-r = fgmres_sequence(q, deltas_ratio, m_0s_avg, n, h, m_base, b, pad_green, max_iter, restrt)
-size(r[5])
-t7 = r[3]
-
-k = fgmres_sequence(q, deltas_ratio, m_0s_mc, n, h, m_base, b, pad_green, max_iter, restrt)
-size(k[5])
-t8 = k[3]
-
-k_rand = fgmres_sequence(q, deltas_ratio, m_0s_rand_no_rep, n, h, m_base, b, pad_green, max_iter, restrt)
-size(k_rand[5])
-t8 = k_rand[3]
+# out = heatmap(real(octa_ratio))
+# save("Project\\figures\\octa grid ratio.png", out)
 
 
+m_0s_names123 = Dict(1 => "avg_m", 2 => "linear_m", 3 => "random_min_max_m", 4 => "gaussian_m", 5 => "min_max_m", 6 => "monte_carlo_m", 7 => "random_no_rep_m")
+res123 = []
+push!(res123, (5,11, 11.123745))
+push!(res123, (1,13, 14.12367455))
+push!(res123, (3,11, 11.122745))
+
+sort!(res123, by=(x) -> (x[2],x[3]))
+
+print_result(res123, m_0s_names123, "test123")
+temp = (1,2,3)
+a,b,c = temp
+
+s = ""
+for (i, (j,num_of_iteration,val)) in enumerate(res123)
+    # j,num_of_iteration,val = r
+    s = @sprintf "%s%d. %-20s ---> Number of iteration: %d | Value: %0.3e\n" s i "test" num_of_iteration val
+end
+@printf "%s" s
