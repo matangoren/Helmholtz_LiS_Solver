@@ -13,8 +13,8 @@ include("auxiliary.jl");
 
 In = (n::Int64)->(return spdiagm(0=>ones(ComplexF64, n)));
 
-function init_params()
-    n = 200;
+function init_params(n)
+    n = n;
     h = 2.0/n;
     m_base = (0.1/(h^2))*(1.0 + 1im*0.05)         # m = k^2. In this case it is constant through space (x).
 
@@ -182,8 +182,9 @@ end
 
 function test_fgmres(m_base, ratio, grid_name, max_iter, restrt, n, h, b, pad_green, q)
     res = []
-    m_0s_names = Dict(1 => "Avarage m", 2 => "Linear m", 3 => "Random min-max m", 4 => "Gaussian m", 5 => "Alternatig min-max m", 6 => "Monte Carlo m", 7 => "Random without repetitions m")
-    m_0s_methods = [avg_m, linear_m, random_min_max_m, gaussian_m, min_max_m, monte_carlo_m, random_no_rep_m]
+    m_0s_names = Dict(1 => "Avarage m", 2 => "Linear m", 3 => "Random min-max m", 4 => "Gaussian m", 5 => "Alternatig min-max m", 
+    6 => "Monte Carlo m", 7 => "Random without repetitions m", 8 => "Monte Carlo + Avarage m")
+    m_0s_methods = [avg_m, linear_m, random_min_max_m, gaussian_m, min_max_m, monte_carlo_m, random_no_rep_m, combined_monte_carlo_avg]
     make_m_0s = (m_0_method, ratio) -> m_0_method(m_base, ratio, max_iter, restrt)
     for (i,method) in enumerate(m_0s_methods)
         println(m_0s_names[i])
@@ -196,18 +197,54 @@ function test_fgmres(m_base, ratio, grid_name, max_iter, restrt, n, h, b, pad_gr
     print_result(res, m_0s_names, grid_name)
 end
 
-n, h, m_base, b, pad_green = init_params()
-max_iter, restrt = 12, 12
+
+function test_fgmres_avg(m_base, ratio, grid_name, max_iter, restrt, n, h, b, pad_green, number_of_repetitions)
+    res = []
+    m_0s_names = Dict(1 => "Avarage m", 2 => "Linear m", 3 => "Random min-max m", 4 => "Gaussian m", 5 => "Alternatig min-max m", 
+    6 => "Monte Carlo m", 7 => "Random without repetitions m", 8 => "Monte Carlo + Avarage m")
+    m_0s_methods = [avg_m, linear_m, random_min_max_m, gaussian_m, min_max_m, monte_carlo_m, random_no_rep_m, combined_monte_carlo_avg]
+    make_m_0s = (m_0_method, ratio) -> m_0_method(m_base, ratio, max_iter, restrt)
+    for (i,method) in enumerate(m_0s_methods)
+        println(m_0s_names[i])
+        counter, num_of_iter, val = 0, 0, 0
+        iter_arr = []
+        for _ in 1:number_of_repetitions
+            q = rand(ComplexF64, n, n)
+            m_0s = make_m_0s(method, ratio)
+            r = fgmres_sequence(q, ratio, m_0s, n, h, m_base, b, pad_green, max_iter, restrt)
+            if size(r[5]) != ()
+                counter += 1
+                num_of_iter += length(r[5])
+                val += r[3]
+                append!(iter_arr, length(r[5]))
+            end
+        end
+        std_err = counter == 0 ? NaN : compute_stderr(iter_arr, counter)
+        num_of_iter = counter == 0 ? Inf : (num_of_iter / counter)
+        push!(res, (i,num_of_iter, (val / counter), std_err))
+    end
+    sort!(res, by=(x) -> (x[2],x[3]))
+    print_result_with_err(res, m_0s_names, grid_name)
+end
+
+
+n, h, m_base, b, pad_green = init_params(80)
+max_iter, restrt = 15, 15
 q = rand(ComplexF64, n, n) # + 1im * rand(ComplexF64, n, n)      # Random initializaton.
 
-dual_ratio = dual_grid_ratio(0.5, n)
-random_ratio = random_grid_ratio(n)
-delta_ratio = delta_grid_ratio(500, n)
-triple_ratio = triple_grid_ratio(0.5,0.8,n)
-octa_ratio = octagon_grid_ratio(0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,n)
-deltas_ratio = deltas_grid_ratio(200, 500, 1, n)
-gaussian_ratio = gaussian_grid_ratio(5,2,n)
+dual_ratio = dual_grid_ratio(0.6, n)
 
+test_fgmres(m_base, dual_ratio, "dual grid", max_iter, restrt, n, h, b, pad_green, q)
+test_fgmres_avg(m_base, dual_ratio, "dual grid", max_iter, restrt, n, h, b, pad_green, 20)
+
+
+
+random_ratio = random_grid_ratio(n)
+# delta_ratio = delta_grid_ratio(1000, n)
+# triple_ratio = triple_grid_ratio(0.5,0.8,n)
+# octa_ratio = octagon_grid_ratio(0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,n)
+deltas_ratio = deltas_grid_ratio(10, 1500, 1, n)
+# gaussian_ratio = gaussian_grid_ratio(5,2,n)
 
 # m_0s_linear = linear_m(m_base, deltas_ratio, max_iter, restrt)
 # m_0s_avg = avg_m(m_base, dual_ratio, max_iter, restrt)
@@ -223,7 +260,6 @@ gaussian_ratio = gaussian_grid_ratio(5,2,n)
 # size(y[5])
 # t2 = y[3]
 
-test_fgmres(m_base, gaussian_ratio, "dual grid", max_iter, restrt, n, h, b, pad_green, q)
 
 # out = heatmap(real(octa_ratio))
 # save("Project\\figures\\octa grid ratio.png", out)

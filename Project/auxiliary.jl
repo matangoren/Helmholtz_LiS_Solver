@@ -125,7 +125,7 @@ end
 
 function gaussian_m(m_base, ratio, max_iter, restrt)
     d = fit(Normal, real.(ratio[:]))
-    lo, hi = quantile.(d, [0.48, 0.52])
+    lo, hi = quantile.(d, [0.45, 0.55])
     x = range(lo, hi; length = max_iter * restrt)
     # samples = pdf.(d, x)
     return m_base * x
@@ -141,6 +141,12 @@ function min_max_m(m_base, ratio, max_iter, restrt)
     return m_0s;
 end
 
+function combined_monte_carlo_avg(m_base, ratio, max_iter, restrt)
+    avg = avg_m(m_base, ratio, max_iter, restrt)
+    monte_carlo = monte_carlo_m(m_base, ratio, max_iter, restrt)
+    return (avg+monte_carlo) / 2
+end
+
 # other functions
 # get element from matrix, given an operator (findmin/findmax)
 function get_value(A, operator)
@@ -150,10 +156,24 @@ function get_value(A, operator)
     return A[i,j];
 end
 
+function compute_stderr(arr, len)
+    avg = sum(arr) / len
+    std_err = arr[:] .- avg * ones(len)
+    return sqrt(sum(std_err .* std_err) / len)
+end
+
 function print_result(res, names_dict, grid_name)
     s = @sprintf "Sequence Results for %s:\n" grid_name 
     for (i, (j, num_of_iteration, val)) in enumerate(res)
         s = @sprintf "%s%d. %-30s ---> Number of iteration: %d | Value: %0.3e\n" s i names_dict[j] num_of_iteration val
+    end
+    @printf "%s" s
+end
+
+function print_result_with_err(res, names_dict, grid_name)
+    s = @sprintf "Sequence Results for %s:\n" grid_name 
+    for (i, (j, num_of_iteration, val, std_err)) in enumerate(res)
+        s = @sprintf "%s%d. %-30s ---> Number of iteration: %d | Value: %0.3e | Stderr: %0.3f\n" s i names_dict[j] num_of_iteration val std_err
     end
     @printf "%s" s
 end
