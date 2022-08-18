@@ -86,7 +86,7 @@ function linear_m(m_base, ratio, max_iter, restrt)
     m_0_reals = collect((i for i in real(min_m):real(delta):real(max_m)))
     m_0_ims = collect((i for i in imag(min_m):imag(delta):imag(max_m)))
     m_0s = zeros(ComplexF64, size(m_0_reals)[1])
-    for i in 1:size(m_0s)[1]
+    for i in 1:(size(m_0s)[1]-1)
         m_0s[i] = m_0_reals[i] + m_0_ims[i]im
     end
     return m_0s;
