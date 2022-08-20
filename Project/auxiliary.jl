@@ -4,7 +4,8 @@ using StatsBase
 
 # Grid ratio initialization
 """
-Return grid with two different intensities, such that 
+Return grid with two different intensities, such that the intensity p1 surrounds a n/2*n/2 sized square with 
+intensity p2.
 """
 function dual_grid_ratio(p1, p2, n)
     ratios = zeros(ComplexF64, n, n) .+ p1
@@ -12,10 +13,11 @@ function dual_grid_ratio(p1, p2, n)
     return ratios;
 end
 
-function triple_grid_ratio(p1, p2, n)
-    ratios = zeros(ComplexF64, n, n) .+ p1
+"""Generate a ratio-grid with 3 ratios: p1, p2 and p3."""
+function triple_grid_ratio(p1, p2, p3, n)
+    ratios = ones(ComplexF64, n, n) .* p1
     ratios[div(2n,12)+1: div(10n,12), div(2n,12)+1:div(10n,12)] .= p2 
-    ratios[div(5n,12)+1: div(7n,12), div(5n,12)+1:div(7n,12)] .= 1
+    ratios[div(5n,12)+1: div(7n,12), div(5n,12)+1:div(7n,12)] .= p3
     return ratios;
 end
 
