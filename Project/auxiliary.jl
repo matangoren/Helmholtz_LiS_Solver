@@ -21,13 +21,13 @@ end
 
 function octagon_grid_ratio(p1, p2, p3, p4, p5, p6, p7, p8, n)
     ratios = zeros(ComplexF64, n, n) .+ p1
-    ratios[div(2n,16)+1: div(15n,16), div(2n,16)+1: div(15n,16)] .= p2
-    ratios[div(3n,16)+1: div(14n,16), div(3n,16)+1:div(14n,16)] .= p3 
-    ratios[div(4n,16)+1: div(13n,16), div(4n,16)+1:div(13n,16)] .= p4 
-    ratios[div(5n,16)+1: div(12n,16), div(5n,16)+1:div(12n,16)] .= p5 
-    ratios[div(6n,16)+1: div(11n,16), div(6n,16)+1:div(11n,16)] .= p6 
-    ratios[div(7n,16)+1: div(10n,16), div(7n,16)+1:div(10n,16)] .= p7
-    ratios[div(8n,16)+1: div(9n,16), div(8n,16)+1:div(9n,16)] .= p8 
+    ratios[div(2n,16): div(15n,16), div(2n,16): div(15n,16)] .= p2
+    ratios[div(3n,16): div(14n,16), div(3n,16):div(14n,16)] .= p3 
+    ratios[div(4n,16): div(13n,16), div(4n,16):div(13n,16)] .= p4 
+    ratios[div(5n,16): div(12n,16), div(5n,16):div(12n,16)] .= p5 
+    ratios[div(6n,16): div(11n,16), div(6n,16):div(11n,16)] .= p6 
+    ratios[div(7n,16): div(10n,16), div(7n,16):div(10n,16)] .= p7
+    ratios[div(8n,16): div(9n,16), div(8n,16):div(9n,16)] .= p8 
     return ratios;
 end
 
@@ -52,18 +52,19 @@ end
 
 """
 num - number of deltas
-p - intencity of delta
+p1 - intencity of delta
+p2 - intencitiy of the background
 n - grid size (n X n matrix)
 returns a grid with num deltas.
 """
-function deltas_grid_ratio(num, p, n)
+function deltas_grid_ratio(num, p1, p2, n)
     if num > n * n
         num = n * n
     end
     indices = sample(1:n * n, num, replace = false)
-    ratios = ones(ComplexF64, n * n)
+    ratios = p2 .* ones(ComplexF64, n * n)
     for i in 1:num
-        ratios[indices[i]] *= p
+        ratios[indices[i]] = p1
     end
     return reshape(ratios, n, n);
 end
@@ -85,7 +86,7 @@ function linear_m(m_base, ratio, max_iter, restrt)
     m_0_reals = collect((i for i in real(min_m):real(delta):real(max_m)))
     m_0_ims = collect((i for i in imag(min_m):imag(delta):imag(max_m)))
     m_0s = zeros(ComplexF64, size(m_0_reals)[1])
-    for i in 1:size(m_0s)[1]
+    for i in 1:(size(m_0s)[1]-1)
         m_0s[i] = m_0_reals[i] + m_0_ims[i]im
     end
     return m_0s;
@@ -124,8 +125,10 @@ end
 
 function gaussian_m(m_base, ratio, max_iter, restrt)
     d = fit(Normal, real.(ratio[:]))
-    samples = rand(d, max_iter * restrt)
-    return m_base * samples
+    lo, hi = quantile.(d, [0.45, 0.55])
+    x = range(lo, hi; length = max_iter * restrt)
+    # samples = pdf.(d, x)
+    return m_base * x
 end
 
 function min_max_m(m_base, ratio, max_iter, restrt)
@@ -138,6 +141,12 @@ function min_max_m(m_base, ratio, max_iter, restrt)
     return m_0s;
 end
 
+function combined_monte_carlo_avg(m_base, ratio, max_iter, restrt)
+    avg = avg_m(m_base, ratio, max_iter, restrt)
+    monte_carlo = monte_carlo_m(m_base, ratio, max_iter, restrt)
+    return (avg+monte_carlo) / 2
+end
+
 # other functions
 # get element from matrix, given an operator (findmin/findmax)
 function get_value(A, operator)
@@ -145,4 +154,26 @@ function get_value(A, operator)
     i = indices[1]
     j = indices[2]
     return A[i,j];
+end
+
+function compute_stderr(arr, len)
+    avg = sum(arr) / len
+    std_err = arr[:] .- avg * ones(len)
+    return sqrt(sum(std_err .* std_err) / len)
+end
+
+function print_result(res, names_dict, grid_name)
+    s = @sprintf "Sequence Results for %s:\n" grid_name 
+    for (i, (j, num_of_iteration, val)) in enumerate(res)
+        s = @sprintf "%s%d. %-30s ---> Number of iteration: %d | Value: %0.3e\n" s i names_dict[j] num_of_iteration val
+    end
+    @printf "%s" s
+end
+
+function print_result_with_err(res, names_dict, grid_name)
+    s = @sprintf "Sequence Results for %s:\n" grid_name 
+    for (i, (j, num_of_iteration, val, std_err)) in enumerate(res)
+        s = @sprintf "%s%d. %-30s ---> Number of iteration: %d | Value: %0.3e | Stderr: %0.3f\n" s i names_dict[j] num_of_iteration val std_err
+    end
+    @printf "%s" s
 end

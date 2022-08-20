@@ -8,13 +8,13 @@ using KrylovMethods
 using Printf
 include("auxiliary.jl");
 
-Random.seed!(1234);
+# Random.seed!(1234);
 
 
 In = (n::Int64)->(return spdiagm(0=>ones(ComplexF64, n)));
 
-function init_params()
-    n = 200;
+function init_params(n)
+    n = n;
     h = 2.0/n;
     m_base = (0.1/(h^2))*(1.0 + 1im*0.05)         # m = k^2. In this case it is constant through space (x).
 
@@ -72,13 +72,13 @@ end
 
 function generate_green(n, kernel, b, pad_green)
     # Generate G (Green's function - solution for a single source in the middle of the grid).
-    temp = fft_conv(kernel, n, pad_green, b);
-    # heatmap(real.(temp))
-    g_temp = temp[Int(n/2):Int(5n/2)-1,Int(n/2):Int(5n/2)-1]
-    # heatmap(real.(g_temp))
-    g_temp = fftshift(g_temp)
-    # heatmap(real.(g_temp))
-    return g_temp
+    green = fft_conv(kernel, n, pad_green, b);
+    # heatmap(real.(green))
+    green = green[Int(n/2):Int(5n/2)-1,Int(n/2):Int(5n/2)-1]
+    # heatmap(real.(green))
+    green = fftshift(green)
+    # heatmap(real.(green))
+    return green
 end
 
 function solve_helm(n, q:: Matrix{ComplexF64}, green)
@@ -180,62 +180,87 @@ function fgmres_sequence(q, ratios, m_0s, n, h, m_base, b, pad_green, max_iter=1
     end
 end
 
+function test_fgmres(m_base, ratio, grid_name, max_iter, restrt, n, h, b, pad_green, q)
+    res = []
+    m_0s_names = Dict(1 => "Avarage m", 2 => "Linear m", 3 => "Random min-max m", 4 => "Gaussian m", 5 => "Alternatig min-max m", 
+    6 => "Monte Carlo m", 7 => "Random without repetitions m", 8 => "Monte Carlo + Avarage m")
+    m_0s_methods = [avg_m, linear_m, random_min_max_m, gaussian_m, min_max_m, monte_carlo_m, random_no_rep_m, combined_monte_carlo_avg]
+    make_m_0s = (m_0_method, ratio) -> m_0_method(m_base, ratio, max_iter, restrt)
+    for (i,method) in enumerate(m_0s_methods)
+        println(m_0s_names[i])
+        m_0s = make_m_0s(method, ratio)
+        r = fgmres_sequence(q, ratio, m_0s, n, h, m_base, b, pad_green, max_iter, restrt)
+        num_of_iter = size(r[5]) == () ? (Inf) : size(r[5])
+        push!(res, (i,num_of_iter[1], r[3]))
+    end
+    sort!(res, by=(x) -> (x[2],x[3]))
+    print_result(res, m_0s_names, grid_name)
+end
 
-n, h, m_base, b, pad_green = init_params()
-max_iter, restrt = 15, 15
-q = rand(ComplexF64, n, n) # + 1im * rand(ComplexF64, n, n)      # Random initializaton.
 
-dual_ratio = dual_grid_ratio(0.5, n)
+function test_fgmres_avg(m_base, ratio, grid_name, max_iter, restrt, n, h, b, pad_green, number_of_repetitions)
+    res = []
+    # m_0s_names = Dict(1 => "Avarage m", 2 => "Linear m",  3 => "Gaussian m",
+    # 4 => "Monte Carlo m", 5 => "Random without repetitions m", 6 => "Monte Carlo + Avarage m")
+    # m_0s_methods = [avg_m, linear_m, gaussian_m, monte_carlo_m, random_no_rep_m, combined_monte_carlo_avg]
+    m_0s_names = Dict(1 => "Monte Carlo m", 2 => "Random without repetitions m")
+    m_0s_methods = [monte_carlo_m, random_no_rep_m]
+    make_m_0s = (m_0_method, ratio) -> m_0_method(m_base, ratio, max_iter, restrt)
+    for (i,method) in enumerate(m_0s_methods)
+        num_of_iter, val, iter_arr = 0, 0, []
+        for j in 1:number_of_repetitions
+            println("Method: ", m_0s_names[i], ",   Iteration Number: ", j)
+            q = rand(ComplexF64, n, n)
+            m_0s = make_m_0s(method, ratio)
+            r = fgmres_sequence(q, ratio, m_0s, n, h, m_base, b, pad_green, max_iter, restrt)
+            num_of_iter += size(r[5]) != () ? length(r[5]) : max_iter * restrt
+            val += size(r[5]) != () ? r[3] : 1e-6
+            append!(iter_arr, size(r[5]) != () ? length(r[5]) : max_iter * restrt)
+        end
+        std_err = compute_stderr(iter_arr, number_of_repetitions)
+        num_of_iter = num_of_iter / number_of_repetitions
+        push!(res, (i,num_of_iter, (val / number_of_repetitions), std_err))
+    end
+    sort!(res, by=(x) -> (x[2],x[3]))
+    print_result_with_err(res, m_0s_names, grid_name)
+end
+
+
+max_iter, restrt = 25, 25
+# q = rand(ComplexF64, n, n) # + 1im * rand(ComplexF64, n, n)      # Random initializaton.
+
+n_0 = 190
+rat = 0.1n_0
+n, h, m_base, b, pad_green = init_params(n_0)
+deltas_ratio = deltas_grid_ratio(Int(rat*rat), 100, 1, n)
+test_fgmres_avg(m_base, deltas_ratio, "deltas grid", max_iter, restrt, n, h, b, pad_green, 20)
+
+
+
 random_ratio = random_grid_ratio(n)
-delta_ratio = delta_grid_ratio(500, n)
-triple_ratio = triple_grid_ratio(0.5,0.8,n)
-octa_ratio = octagon_grid_ratio(0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,n)
-deltas_ratio = deltas_grid_ratio(10, 500, n)
+# dual_ratio = dual_grid_ratio(0.6, n)
+# delta_ratio = delta_grid_ratio(1000, n)
+# triple_ratio = triple_grid_ratio(0.5,0.8,n)
+# octa_ratio = octagon_grid_ratio(0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,n)
+# gaussian_ratio = gaussian_grid_ratio(5,2,n)
 
-m_0s_linear = linear_m(m_base, deltas_ratio, max_iter, restrt)
+# m_0s_linear = linear_m(m_base, deltas_ratio, max_iter, restrt)
 # m_0s_avg = avg_m(m_base, dual_ratio, max_iter, restrt)
-m_0s_avg = avg_m(m_base, deltas_ratio, max_iter, restrt)
-m_0s_rand = random_min_max_m(m_base, deltas_ratio, max_iter, restrt)
-m_0s_gaussian = gaussian_m(m_base, deltas_ratio, max_iter, restrt)
-m_0s_monte_carlo = monte_carlo_m(m_base, deltas_ratio, max_iter, restrt)
-m_0s_minmax = min_max_m(m_base, deltas_ratio, max_iter, restrt)
+# m_0s_avg = avg_m(m_base, dual_ratio, max_iter, restrt)
+# m_0s_rand = random_min_max_m(m_base, deltas_ratio, max_iter, restrt)
+# m_0s_gaussian = gaussian_m(m_base, dual_ratio, max_iter, restrt)
+# m_0s_monte_carlo = monte_carlo_m(m_base, deltas_ratio, max_iter, restrt)
+# m_0s_minmax = min_max_m(m_base, dual_ratio, max_iter, restrt)
 # m_0s_rand_no_rep = random_rep_m(m_base, dual_ratio, max_iter, restrt)
-m_0s_rand_no_rep = random_no_rep_m(m_base, deltas_ratio, max_iter, restrt)
+# m_0s_rand_no_rep = random_no_rep_m(m_base, deltas_ratio, max_iter, restrt)
 
-y = fgmres_sequence(q, deltas_ratio, m_0s_avg, n, h, m_base, b, pad_green, max_iter, restrt)
-size(y[5])
-t2 = y[3]
+# y = fgmres_sequence(q, dual_ratio, m_0s_avg, n, h, m_base, b, pad_green, max_iter, restrt)
+# size(y[5])
+# t2 = y[3]
 
-x = fgmres_sequence(q, deltas_ratio, m_0s_linear, n, h, m_base, b, pad_green, max_iter, restrt)
-size(x[5])
-t1 = x[3]
+# test_fgmres(m_base, dual_ratio, "dual grid", max_iter, restrt, n, h, b, pad_green, q)
 
-z = fgmres_sequence(q, deltas_ratio, m_0s_minmax, n, h, m_base, b, pad_green, max_iter, restrt)
-size(z[5])
-t3 = z[3]
-
-w = fgmres_sequence(q, deltas_ratio, m_0s_gaussian, n, h, m_base, b, pad_green, max_iter, restrt)
-size(w[5])
-t4 = w[3]  
-
-a = fgmres_sequence(q, deltas_ratio, m_0s_monte_carlo, n, h, m_base, b, pad_green, max_iter, restrt)
-size(a[5])
-t5 = a[3]  
-
-b = fgmres_sequence(q, deltas_ratio, m_0s_rand, n, h, m_base, b, pad_green, max_iter, restrt)
-size(b[5])
-t6 = b[3]  
-
-r = fgmres_sequence(q, deltas_ratio, m_0s_avg, n, h, m_base, b, pad_green, max_iter, restrt)
-size(r[5])
-t7 = r[3]
-
-k = fgmres_sequence(q, deltas_ratio, m_0s_mc, n, h, m_base, b, pad_green, max_iter, restrt)
-size(k[5])
-t8 = k[3]
-
-k_rand = fgmres_sequence(q, deltas_ratio, m_0s_rand_no_rep, n, h, m_base, b, pad_green, max_iter, restrt)
-size(k_rand[5])
-t8 = k_rand[3]
-
-
+# out = heatmap(real(octa_ratio))
+# save("Project\\figures\\octa grid ratio.png", out)
+a = 1
+println("hello world: " , 213, " how\n are\n you?\n", a)
