@@ -123,12 +123,18 @@ function avg_m(m_base, ratio, max_iter, restrt)
     return avg_m * ones(ComplexF64, max_iter * restrt);
 end
 
-function gaussian_m(m_base, ratio, max_iter, restrt)
+function gaussian_range_m(m_base, ratio, max_iter, restrt)
     d = fit(Normal, real.(ratio[:]))
     lo, hi = quantile.(d, [0.45, 0.55])
     x = range(lo, hi; length = max_iter * restrt)
     # samples = pdf.(d, x)
     return m_base * x
+end
+
+function gaussian_m(m_base, ratio, max_iter, restrt)
+    d = fit(Normal, real.(ratio[:]))
+    samples = rand(d, max_iter * restrt)
+    return m_base * samples
 end
 
 function min_max_m(m_base, ratio, max_iter, restrt)
