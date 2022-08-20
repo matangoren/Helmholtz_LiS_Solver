@@ -262,5 +262,3 @@ random_ratio = random_grid_ratio(n)
 
 # out = heatmap(real(octa_ratio))
 # save("Project\\figures\\octa grid ratio.png", out)
-a = 1
-println("hello world: " , 213, " how\n are\n you?\n", a)
