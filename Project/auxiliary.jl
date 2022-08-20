@@ -4,7 +4,7 @@ using StatsBase
 
 # Grid ratio initialization
 """
-Return grid with two different intensities, such that the intensity p1 surrounds a n/2*n/2 sized square with 
+Return ratio-grid with two different intensities, such that the intensity p1 surrounds a n/2*n/2 sized square with 
 intensity p2.
 """
 function dual_grid_ratio(p1, p2, n)
@@ -21,6 +21,7 @@ function triple_grid_ratio(p1, p2, p3, n)
     return ratios;
 end
 
+"""Generate a ratio-grid with 3 ratios: p1, p2 and p3 (p1 on the outer layer, then p2 and p3 in the inner layers)"""
 function octagon_grid_ratio(p1, p2, p3, p4, p5, p6, p7, p8, n)
     ratios = zeros(ComplexF64, n, n) .+ p1
     ratios[div(2n,16): div(15n,16), div(2n,16): div(15n,16)] .= p2
@@ -33,10 +34,12 @@ function octagon_grid_ratio(p1, p2, p3, p4, p5, p6, p7, p8, n)
     return ratios;
 end
 
+"""Generate a constant ratio-grid of ones"""
 function const_grid_ratio(n) 
     return ones(ComplexF64, n, n);
 end
 
+"""Generate a randomly sampled ratio-grid"""
 function random_grid_ratio(n)
     return rand(n, n)
 end
@@ -81,6 +84,8 @@ function gaussian_grid_ratio(mu, sigma, n)
 end
 
 # m(x,y) Initialization
+"""Generate a vector with a linear range of components from the minimal value of a ratio-grid to the maximum, 
+calculated for the fgmres function"""
 function linear_m(m_base, ratio, max_iter, restrt)
     m_grid = m_base * ratio
     min_m, max_m = get_value(m_grid, findmin), get_value(m_grid, findmax);
@@ -94,6 +99,8 @@ function linear_m(m_base, ratio, max_iter, restrt)
     return m_0s;
 end
 
+"""Return a vector of length max_iter * restrt, 
+filled with random numbers in the range [min_val, max_val] of the ratio-grid ratio."""
 function random_min_max_m(m_base, ratio, max_iter, restrt)
     m_grid = m_base * ratio
     min_m, max_m = get_value(m_grid, findmin), get_value(m_grid, findmax)
@@ -102,8 +109,8 @@ function random_min_max_m(m_base, ratio, max_iter, restrt)
 end
 
 """
-return an array with size of max_iter * restrt,
-containing random valuse from ratio without repetitions.
+return a vector of length max_iter * restrt,
+where elements are randomly sampled from ratio WITHOUT REPITITIONS.
 """
 function random_no_rep_m(m_base, ratio, max_iter, restrt)
     m_grid = m_base * ratio
@@ -111,20 +118,28 @@ function random_no_rep_m(m_base, ratio, max_iter, restrt)
 end
 
 """
-return an array with size of max_iter * restrt,
-elements are taken from ratio with repetitions.
+return a vector of length of max_iter * restrt,
+where elements are randomly sampled from ratio with repetitions.
 """
 function monte_carlo_m(m_base, ratio, max_iter, restrt)
     m_grid = m_base * ratio
     return sample(m_grid[:], max_iter * restrt)
 end
 
+"""
+return a vector of length of max_iter * restrt,
+filled with the average value of the ratio-grid ratio.
+"""
 function avg_m(m_base, ratio, max_iter, restrt)
     m_grid = m_base * ratio
     avg_m = sum(m_grid) / (size(m_grid)[1] * size(m_grid)[2])
     return avg_m * ones(ComplexF64, max_iter * restrt);
 end
 
+"""
+return a vector of length of max_iter * restrt,
+with an ordered range of ??.
+"""
 function gaussian_range_m(m_base, ratio, max_iter, restrt)
     d = fit(Normal, real.(ratio[:]))
     lo, hi = quantile.(d, [0.45, 0.55])
@@ -133,12 +148,22 @@ function gaussian_range_m(m_base, ratio, max_iter, restrt)
     return m_base * x
 end
 
+"""
+return a vector of length of max_iter * restrt,
+where elements are randomly sampled from a gaussian calculated from the elements of the 
+ratio-grid ratio.
+"""
 function gaussian_m(m_base, ratio, max_iter, restrt)
     d = fit(Normal, real.(ratio[:]))
     samples = rand(d, max_iter * restrt)
     return m_base * samples
 end
 
+"""
+return a vector of length of max_iter * restrt,
+where elements are sampled from minimum value and maximum value of the 
+ratio-grid ratio, in a tethered manner.
+"""
 function min_max_m(m_base, ratio, max_iter, restrt)
     m_grid = m_base * ratio
     min_m, max_m = get_value(m_grid, findmin), get_value(m_grid, findmax);
@@ -149,6 +174,11 @@ function min_max_m(m_base, ratio, max_iter, restrt)
     return m_0s;
 end
 
+"""
+return a vector of length of max_iter * restrt,
+where elements are the average of the average value of the 
+ratio-grid ratio, and a randomly sampled value from ratio.
+"""
 function combined_monte_carlo_avg(m_base, ratio, max_iter, restrt)
     avg = avg_m(m_base, ratio, max_iter, restrt)
     monte_carlo = monte_carlo_m(m_base, ratio, max_iter, restrt)
@@ -156,7 +186,7 @@ function combined_monte_carlo_avg(m_base, ratio, max_iter, restrt)
 end
 
 # other functions
-# get element from matrix, given an operator (findmin/findmax)
+"""get element from matrix, given an operator (findmin/findmax)."""
 function get_value(A, operator)
     _, indices = operator(norm.(A))
     i = indices[1]
@@ -164,12 +194,14 @@ function get_value(A, operator)
     return A[i,j];
 end
 
+"""Compute and return the standard-error of the values of vector arr."""
 function compute_stderr(arr, len)
     avg = sum(arr) / len
     std_err = arr[:] .- avg * ones(len)
     return sqrt(sum(std_err .* std_err) / len)
 end
 
+"""Print results."""
 function print_result(res, names_dict, grid_name)
     s = @sprintf "Sequence Results for %s:\n" grid_name 
     for (i, (j, num_of_iteration, val)) in enumerate(res)
@@ -178,6 +210,7 @@ function print_result(res, names_dict, grid_name)
     @printf "%s" s
 end
 
+"""Print results."""
 function print_result_with_err(res, names_dict, grid_name)
     s = @sprintf "Sequence Results for %s:\n" grid_name 
     for (i, (j, num_of_iteration, val, std_err)) in enumerate(res)
