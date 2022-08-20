@@ -197,7 +197,8 @@ function fgmres_sequence(q, ratios, m_0s, n, h, m_base, b, pad_green, max_iter=1
     end
 end
 
-
+"""Test which of the m_0 picking methods results in the lowest number of iterations,
+    for ratio ratio."""
 function test_fgmres(m_base, ratio, grid_name, max_iter, restrt, n, h, b, pad_green, q)
     res = []
     m_0s_names = Dict(1 => "Avarage m", 2 => "Linear m", 3 => "Random min-max m", 
@@ -252,7 +253,7 @@ n_0 = 190
 rat = 0.1n_0
 n, h, m_base, b, pad_green = init_params(n_0)
 deltas_ratio = deltas_grid_ratio(Int(rat*rat), 100, 1, n)
-test_fgmres_avg(m_base, deltas_ratio, "deltas grid", max_iter, restrt, n, h, b, pad_green, 20)
+test_fgmres_avg(m_base, deltas_ratio, "deltas grid", max_iter, restrt, n, h, b, pad_green, 2)
 
 
 
