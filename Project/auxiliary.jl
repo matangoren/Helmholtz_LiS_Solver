@@ -4,11 +4,11 @@ using StatsBase
 
 # Grid ratio initialization
 """
-return grid with two different intencities.
+Return grid with two different intensities, such that 
 """
-function dual_grid_ratio(p, n)
-    ratios = zeros(ComplexF64, n, n) .+ p
-    ratios[Int(n/4)+1: Int(3n/4), Int(n/4)+1:Int(3n/4)] = ones(Int(n/2), Int(n/2))
+function dual_grid_ratio(p1, p2, n)
+    ratios = zeros(ComplexF64, n, n) .+ p1
+    ratios[Int(n/4)+1: Int(3n/4), Int(n/4)+1:Int(3n/4)] = ones(Int(n/2), Int(n/2)) .* p2
     return ratios;
 end
 

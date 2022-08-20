@@ -182,9 +182,11 @@ end
 
 function test_fgmres(m_base, ratio, grid_name, max_iter, restrt, n, h, b, pad_green, q)
     res = []
-    m_0s_names = Dict(1 => "Avarage m", 2 => "Linear m", 3 => "Random min-max m", 4 => "Gaussian m", 5 => "Alternatig min-max m", 
-    6 => "Monte Carlo m", 7 => "Random without repetitions m", 8 => "Monte Carlo + Avarage m")
-    m_0s_methods = [avg_m, linear_m, random_min_max_m, gaussian_m, min_max_m, monte_carlo_m, random_no_rep_m, combined_monte_carlo_avg]
+    m_0s_names = Dict(1 => "Avarage m", 2 => "Linear m", 3 => "Random min-max m", 
+    4 => "Gaussian m", 5 => "Alternatig min-max m",     6 => "Monte Carlo m", 
+    7 => "Random without repetitions m", 8 => "Monte Carlo + Avarage m")
+    m_0s_methods = [avg_m, linear_m, random_min_max_m, gaussian_m, 
+    min_max_m, monte_carlo_m, random_no_rep_m, combined_monte_carlo_avg]
     make_m_0s = (m_0_method, ratio) -> m_0_method(m_base, ratio, max_iter, restrt)
     for (i,method) in enumerate(m_0s_methods)
         println(m_0s_names[i])
@@ -196,7 +198,6 @@ function test_fgmres(m_base, ratio, grid_name, max_iter, restrt, n, h, b, pad_gr
     sort!(res, by=(x) -> (x[2],x[3]))
     print_result(res, m_0s_names, grid_name)
 end
-
 
 function test_fgmres_avg(m_base, ratio, grid_name, max_iter, restrt, n, h, b, pad_green, number_of_repetitions)
     res = []
@@ -237,7 +238,35 @@ test_fgmres_avg(m_base, deltas_ratio, "deltas grid", max_iter, restrt, n, h, b, 
 
 
 
-random_ratio = random_grid_ratio(n)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# random_ratio = random_grid_ratio(n)
 # dual_ratio = dual_grid_ratio(0.6, n)
 # delta_ratio = delta_grid_ratio(1000, n)
 # triple_ratio = triple_grid_ratio(0.5,0.8,n)
@@ -254,7 +283,7 @@ random_ratio = random_grid_ratio(n)
 # m_0s_rand_no_rep = random_rep_m(m_base, dual_ratio, max_iter, restrt)
 # m_0s_rand_no_rep = random_no_rep_m(m_base, deltas_ratio, max_iter, restrt)
 
-# y = fgmres_sequence(q, dual_ratio, m_0s_avg, n, h, m_base, b, pad_green, max_iter, restrt)
+# y = fgmres_sequence(q, random_ratio, m_0s_avg, n, h, m_base, b, pad_green, max_iter, restrt)
 # size(y[5])
 # t2 = y[3]
 
@@ -262,3 +291,5 @@ random_ratio = random_grid_ratio(n)
 
 # out = heatmap(real(octa_ratio))
 # save("Project\\figures\\octa grid ratio.png", out)
+
+
