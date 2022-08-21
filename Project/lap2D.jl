@@ -8,7 +8,7 @@ using KrylovMethods
 using Printf
 include("auxiliary.jl");
 
-# Random.seed!(1234);
+Random.seed!(1234);
 
 
 In = (n::Int64)->(return spdiagm(0=>ones(ComplexF64, n)));
@@ -189,7 +189,7 @@ function fgmres_sequence(q, ratios, m_0s, n, h, m_base, b, pad_green, max_iter=1
     M = q -> M_gen(q, n, h, m_g, b, pad_green)
     # test printing and behaviour for early stopping
     try
-        xtt = fgmres(A_func, q[:], restrt, tol=tol, maxIter=max_iter, M=M, out=2, storeInterm=true)
+        xtt = fgmres(A_func, q[:], restrt, tol=tol, maxIter=max_iter, M=M, out=2, storeInterm=true, flexible=true)
         return xtt
     catch e
         println("Probably reached the maximal number of iterations without converging!")
@@ -265,13 +265,13 @@ heatmap(imag.(q))
 # Initialize all grids.
 random_grid = random_grid_ratio(n)
 heatmap(real.(random_grid))
-dual_ratio = dual_grid_ratio(0.1, 0.9, n)
+dual_ratio = dual_grid_ratio(0.4, 0.6, n)
 heatmap(real.(dual_ratio))
-triple_ratio = triple_grid_ratio(1.5, 0.8, 0.2, n)
+triple_ratio = triple_grid_ratio(1, 0.8, 0.2, n)
 heatmap(real.(triple_ratio))
-delta_ratio = delta_grid_ratio(10000, n)
+delta_ratio = delta_grid_ratio(1000, n)
 heatmap(real.(delta_ratio))
-deltas_ratio = deltas_grid_ratio(100, 10000, 1, n)
+deltas_ratio = deltas_grid_ratio(100, 1000, 1, n)
 heatmap(real.(deltas_ratio))
 octa_ratio = octagon_grid_ratio(0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,n)
 heatmap(real.(octa_ratio))

@@ -97,14 +97,14 @@ function linear_m(m_base, ratio, max_iter, restrt)
     return m_0s;
 end
 
-"""Returns a vector of length max_iter * restrt, 
-    filled with random numbers in the range [min_val, max_val] of the ratio-grid ratio."""
-function random_min_max_m(m_base, ratio, max_iter, restrt)
-    m_grid = m_base * ratio
-    min_m, max_m = get_value(m_grid, findmin), get_value(m_grid, findmax)
-    return rand(Uniform(real(min_m), real(max_m)), max_iter * restrt) .+ 
-    1im * rand(Uniform(imag(min_m), imag(max_m)), max_iter * restrt);
-end
+# """Returns a vector of length max_iter * restrt, 
+#     filled with random numbers in the range [min_val, max_val] of the ratio-grid ratio."""
+# function random_min_max_m(m_base, ratio, max_iter, restrt)
+#     m_grid = m_base * ratio
+#     min_m, max_m = get_value(m_grid, findmin), get_value(m_grid, findmax)
+#     return rand(Uniform(real(min_m), real(max_m)), max_iter * restrt) .+ 
+#     1im * rand(Uniform(imag(min_m), imag(max_m)), max_iter * restrt);
+# end
 
 """Returns a vector of length max_iter * restrt,
     where elements are randomly sampled from ratio WITHOUT REPITITIONS."""
@@ -149,16 +149,16 @@ function gaussian_depricated_m(m_base, ratio, max_iter, restrt, sigma_ratio)
     return d, new_d, m_base .* rand(new_d, max_iter * restrt)
 end
 
-"""
-return a vector of length of max_iter * restrt,
-where elements are randomly sampled from a gaussian calculated from the elements of the 
-ratio-grid ratio.
-"""
-function gaussian_m(m_base, ratio, max_iter, restrt)
-    d = fit(Normal, real.(ratio[:]))
-    samples = rand(d, max_iter * restrt)
-    return m_base * samples
-end
+# """
+# return a vector of length of max_iter * restrt,
+# where elements are randomly sampled from a gaussian calculated from the elements of the 
+# ratio-grid ratio.
+# """
+# function gaussian_m(m_base, ratio, max_iter, restrt)
+#     d = fit(Normal, real.(ratio[:]))
+#     samples = rand(d, max_iter * restrt)
+#     return m_base * samples
+# end
 
 """
 return a vector of length of max_iter * restrt,
