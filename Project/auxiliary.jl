@@ -8,8 +8,8 @@ Return ratio-grid with two different intensities, such that the intensity p1 sur
 intensity p2.
 """
 function dual_grid_ratio(p1, p2, n)
-    ratios = zeros(ComplexF64, n, n) .+ p1
-    ratios[Int(n/4)+1: Int(3n/4), Int(n/4)+1:Int(3n/4)] = ones(Int(n/2), Int(n/2)) .* p2
+    ratios = ones(ComplexF64, n, n) .* p1
+    ratios[Int(n/4)+1: Int(3n/4), Int(n/4)+1:Int(3n/4)] = zeros(Int(n/2), Int(n/2)) .* p2
     return ratios;
 end
 
@@ -74,9 +74,7 @@ function deltas_grid_ratio(num, p1, p2, n)
     return reshape(ratios, n, n);
 end
 
-"""
-return a grid with gaussian distribution.
-"""
+"""Returns a grid with gaussian distribution."""
 function gaussian_grid_ratio(mu, sigma, n)
     d = Normal(mu, sigma)
     ratios = rand(d, n, n)
@@ -84,8 +82,8 @@ function gaussian_grid_ratio(mu, sigma, n)
 end
 
 # m(x,y) Initialization
-"""Generate a vector with a linear range of components from the minimal value of a ratio-grid to the maximum, 
-calculated for the fgmres function"""
+"""Generates a vector with a linear range of components from the minimal value of a ratio-grid to the maximum, 
+    calculated for the fgmres function"""
 function linear_m(m_base, ratio, max_iter, restrt)
     m_grid = m_base * ratio
     min_m, max_m = get_value(m_grid, findmin), get_value(m_grid, findmax);
@@ -99,8 +97,8 @@ function linear_m(m_base, ratio, max_iter, restrt)
     return m_0s;
 end
 
-"""Return a vector of length max_iter * restrt, 
-filled with random numbers in the range [min_val, max_val] of the ratio-grid ratio."""
+"""Returns a vector of length max_iter * restrt, 
+    filled with random numbers in the range [min_val, max_val] of the ratio-grid ratio."""
 function random_min_max_m(m_base, ratio, max_iter, restrt)
     m_grid = m_base * ratio
     min_m, max_m = get_value(m_grid, findmin), get_value(m_grid, findmax)
@@ -108,26 +106,22 @@ function random_min_max_m(m_base, ratio, max_iter, restrt)
     1im * rand(Uniform(imag(min_m), imag(max_m)), max_iter * restrt);
 end
 
-"""
-return a vector of length max_iter * restrt,
-where elements are randomly sampled from ratio WITHOUT REPITITIONS.
-"""
+"""Returns a vector of length max_iter * restrt,
+    where elements are randomly sampled from ratio WITHOUT REPITITIONS."""
 function random_no_rep_m(m_base, ratio, max_iter, restrt)
     m_grid = m_base * ratio
     return sample(m_grid[:], max_iter * restrt, replace = false)
 end
 
-"""
-return a vector of length of max_iter * restrt,
-where elements are randomly sampled from ratio with repetitions.
-"""
+"""Returns a vector of length of max_iter * restrt,
+    where elements are randomly sampled from ratio with repetitions."""
 function monte_carlo_m(m_base, ratio, max_iter, restrt)
     m_grid = m_base * ratio
     return sample(m_grid[:], max_iter * restrt)
 end
 
 """
-return a vector of length of max_iter * restrt,
+returns a vector of length of max_iter * restrt,
 filled with the average value of the ratio-grid ratio.
 """
 function avg_m(m_base, ratio, max_iter, restrt)
@@ -140,12 +134,19 @@ end
 return a vector of length of max_iter * restrt,
 with an ordered range of ??.
 """
-function gaussian_range_m(m_base, ratio, max_iter, restrt)
+function gaussian_range_m(m_base, ratio, max_iter, restrt, effective_sigma)
     d = fit(Normal, real.(ratio[:]))
-    lo, hi = quantile.(d, [0.45, 0.55])
+    lo, hi = quantile.(d, [0.5-effective_sigma, 0.5+effective_sigma])
     x = range(lo, hi; length = max_iter * restrt)
     # samples = pdf.(d, x)
     return m_base * x
+end
+
+function gaussian_depricated_m(m_base, ratio, max_iter, restrt, sigma_ratio)
+    d = fit(Normal, real.(ratio[:]))
+    sigma = std(d)
+    new_d = Normal(mean(d), sigma*sigma_ratio)
+    return d, new_d, m_base .* rand(new_d, max_iter * restrt)
 end
 
 """

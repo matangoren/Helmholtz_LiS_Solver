@@ -246,14 +246,50 @@ function test_fgmres_avg(m_base, ratio, grid_name, max_iter, restrt, n, h, b, pa
 end
 
 
-max_iter, restrt = 25, 25
+# max_iter, restrt = 25, 25
 # q = rand(ComplexF64, n, n) # + 1im * rand(ComplexF64, n, n)      # Random initializaton.
 
-n_0 = 190
-rat = 0.1n_0
-n, h, m_base, b, pad_green = init_params(n_0)
-deltas_ratio = deltas_grid_ratio(Int(rat*rat), 100, 1, n)
-test_fgmres_avg(m_base, deltas_ratio, "deltas grid", max_iter, restrt, n, h, b, pad_green, 2)
+# n_0 = 190
+# rat = 0.1n_0
+# n, h, m_base, b, pad_green = init_params(n_0)
+# deltas_ratio = deltas_grid_ratio(Int(rat*rat), 100, 1, n)
+# test_fgmres_avg(m_base, deltas_ratio, "deltas grid", max_iter, restrt, n, h, b, pad_green, 2)
+
+
+n, h, m_base, b, pad_green = init_params(200)
+max_iter, restrt = 25, 25
+q = rand(ComplexF64, n, n) # + 1im * rand(ComplexF64, n, n)      # Random initializaton.
+heatmap(real.(q))
+heatmap(imag.(q))
+
+# Initialize all grids.
+random_grid = random_grid_ratio(n)
+heatmap(real.(random_grid))
+dual_ratio = dual_grid_ratio(0.4, 0.6, n)
+heatmap(real.(dual_ratio))
+triple_ratio = triple_grid_ratio(1, 0.8, 0.6, n)
+heatmap(real.(triple_ratio))
+delta_ratio = delta_grid_ratio(1000, n)
+heatmap(real.(delta_ratio))
+octa_ratio = octagon_grid_ratio(0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,n)
+heatmap(real.(octa_ratio))
+gaussian_ratio = gaussian_grid_ratio(1,0.3,n)
+heatmap(real.(gaussian_ratio))
+
+# Try the different methods of picking m_0s along the calculation for the different grids.
+ratios = [random_grid, dual_ratio, triple_ratio, delta_ratio, octa_ratio, gaussian_ratio]
+# m_0s = [avg_m, linear_m, random_min_max_m, gaussian_m, min_max_m, monte_carlo_m, random_no_rep_m, combined_monte_carlo_avg]
+m_0s_methods = [avg_m, gaussian_depricated_m]
+function get_num_iterations_deprecated_gaussian(m_base, max_iter, restrt, deprecate)
+    res = []
+    for i in 1:size(ratios)[1]
+        curr_m0s = 
+        curr_y = fgmres_sequence(m_base, ratios[i], curr_m0s, n, h, m_base, b, pad_green, max_iter, restrt)
+        push!(res, (size(curr_y[5]), curr_y[3]))
+    end
+    return res
+end
+get_num_iterations(m_base, 1, max_iter, restrt)
 
 
 
@@ -261,6 +297,38 @@ test_fgmres_avg(m_base, deltas_ratio, "deltas grid", max_iter, restrt, n, h, b, 
 
 
 
+m_0s_avg = avg_m(m_base, random_grid, max_iter, restrt)
+y1 = fgmres_sequence(q, random_grid, m_0s_avg, n, h, m_base, b, pad_green, max_iter, restrt)
+size(y1[5])
+y1[3]
+
+orig, new, m_0s_gaussian_depricated = gaussian_depricated_m(m_base, random_grid, max_iter, restrt, 0.001)
+y5 = fgmres_sequence(q, random_grid, m_0s_gaussian_depricated, n, h, m_base, b, pad_green, max_iter, restrt)
+size(y5[5])
+y5[3]
+
+
+m_0s_gaussian_range = gaussian_range_m(m_base, random_grid, max_iter, restrt, 0.1)
+y4 = fgmres_sequence(q, random_grid, m_0s_gaussian_range, n, h, m_base, b, pad_green, max_iter, restrt)
+size(d = y4[5])
+mean(d)
+std(d)y4[3]
+
+
+m_0s_gaussian = gaussian_m(m_base, random_grid, max_iter, restrt)
+y2 = fgmres_sequence(q, random_grid, m_0s_gaussian, n, h, m_base, b, pad_green, max_iter, restrt)
+size(y2[5])
+y2[3]
+
+m_0s_monte_carlo = monte_carlo_m(m_base, random_grid, max_iter, restrt)
+y3 = fgmres_sequence(q, random_grid, m_0s_monte_carlo, n, h, m_base, b, pad_green, max_iter, restrt)
+size(y3[5])
+y3[3]
+
+
+
+
+print(5)
 
 
 
@@ -268,9 +336,7 @@ test_fgmres_avg(m_base, deltas_ratio, "deltas grid", max_iter, restrt, n, h, b, 
 
 
 
-
-
-
+# Write a function that gets the wanted q (random, or some other q), g
 
 
 
