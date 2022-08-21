@@ -200,11 +200,11 @@ end
 
 function test_fgmres_avg(m_base, ratio, grid_name, max_iter, restrt, n, h, b, pad_green, number_of_repetitions)
     res = []
-    # m_0s_names = Dict(1 => "Avarage m", 2 => "Linear m",  3 => "Gaussian m",
+    # m_0s_names = Dict(1 => "Average m", 2 => "Linear m",  3 => "Gaussian m",
     # 4 => "Monte Carlo m", 5 => "Random without repetitions m", 6 => "Monte Carlo + Avarage m")
-    # m_0s_methods = [avg_m, linear_m, gaussian_m, monte_carlo_m, random_no_rep_m, combined_monte_carlo_avg]
-    m_0s_names = Dict(1 => "Monte Carlo m", 2 => "Random without repetitions m")
-    m_0s_methods = [monte_carlo_m, random_no_rep_m]
+    # m_0s_methods = [avg_m, linear_m, gaussian_range_m, monte_carlo_m, random_no_rep_m, combined_monte_carlo_avg]
+    m_0s_names = Dict(1 => "Monte Carlo m")
+    m_0s_methods = [monte_carlo_m]
     make_m_0s = (m_0_method, ratio) -> m_0_method(m_base, ratio, max_iter, restrt)
     for (i,method) in enumerate(m_0s_methods)
         num_of_iter, val, iter_arr = 0, 0, []
@@ -229,18 +229,18 @@ end
 max_iter, restrt = 25, 25
 # q = rand(ComplexF64, n, n) # + 1im * rand(ComplexF64, n, n)      # Random initializaton.
 
-n_0 = 190
-rat = 0.1n_0
+n_0 = 200
+# rat = 0.1n_0
 n, h, m_base, b, pad_green = init_params(n_0)
-deltas_ratio = deltas_grid_ratio(Int(rat*rat), 100, 1, n)
-test_fgmres_avg(m_base, deltas_ratio, "deltas grid", max_iter, restrt, n, h, b, pad_green, 20)
+# triple_ratio = triple_grid_ratio(0.4,0.8,n)
+test_fgmres_avg(m_base, random_ratio, "random grid", max_iter, restrt, n, h, b, pad_green, 1)
 
 
 
 random_ratio = random_grid_ratio(n)
+# deltas_ratio = deltas_grid_ratio(Int(rat*rat), 100, 1, n)
 # dual_ratio = dual_grid_ratio(0.6, n)
 # delta_ratio = delta_grid_ratio(1000, n)
-# triple_ratio = triple_grid_ratio(0.5,0.8,n)
 # octa_ratio = octagon_grid_ratio(0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,n)
 # gaussian_ratio = gaussian_grid_ratio(5,2,n)
 
@@ -262,5 +262,5 @@ random_ratio = random_grid_ratio(n)
 
 # out = heatmap(real(octa_ratio))
 # save("Project\\figures\\octa grid ratio.png", out)
-a = 1
-println("hello world: " , 213, " how\n are\n you?\n", a)
+# a = 1
+# println("hello world: " , 213, " how\n are\n you?\n", a)

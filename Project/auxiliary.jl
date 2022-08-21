@@ -123,12 +123,31 @@ function avg_m(m_base, ratio, max_iter, restrt)
     return avg_m * ones(ComplexF64, max_iter * restrt);
 end
 
-function gaussian_m(m_base, ratio, max_iter, restrt)
+function gaussian_range_m(m_base, ratio, max_iter, restrt)
     d = fit(Normal, real.(ratio[:]))
     lo, hi = quantile.(d, [0.45, 0.55])
     x = range(lo, hi; length = max_iter * restrt)
     # samples = pdf.(d, x)
     return m_base * x
+end
+
+function gaussian_depricated_m(m_base, ratio, max_iter, restrt)
+    sigma_ratio = 0.001
+    d = fit(Normal, real.(ratio[:]))
+    sigma = std(d)
+    new_d = Normal(mean(d), sigma*sigma_ratio)
+    return m_base .* rand(new_d, max_iter * restrt)
+end
+
+"""
+return a vector of length of max_iter * restrt,
+where elements are randomly sampled from a gaussian calculated from the elements of the 
+ratio-grid ratio.
+"""
+function gaussian_m(m_base, ratio, max_iter, restrt)
+    d = fit(Normal, real.(ratio[:]))
+    samples = rand(d, max_iter * restrt)
+    return m_base * samples
 end
 
 function min_max_m(m_base, ratio, max_iter, restrt)
