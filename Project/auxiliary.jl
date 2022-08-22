@@ -142,7 +142,7 @@ function gaussian_range_m(m_base, ratio, max_iter, restrt, effective_sigma)
     return m_base * x
 end
 
-function gaussian_depricated_m(m_base, ratio, max_iter, restrt, sigma_ratio)
+function gaussian_depricated_m(m_base, ratio, max_iter, restrt, sigma_ratio=0.05)
     d = fit(Normal, real.(ratio[:]))
     sigma = std(d)
     new_d = Normal(mean(d), sigma*sigma_ratio)
