@@ -172,7 +172,7 @@ function fgmres_sequence(q, ratios, m_0s, n, h, m_base, b, pad_green, max_iter=1
     M = q -> M_gen(q, n, h, m_g, b, pad_green)
     # test printing and behaviour for early stopping
     try
-        xtt = fgmres(A_func, q[:], restrt, tol=tol, maxIter=max_iter, M=M, out=2, storeInterm=true)
+        xtt = fgmres(A_func, q[:], restrt, tol=tol, maxIter=max_iter, M=M, out=2, storeInterm=true, flexible=true)
         return xtt
     catch e
         println("Probably reached the maximal number of iterations without converging!")
@@ -198,13 +198,8 @@ function test_fgmres(m_base, ratio, grid_name, max_iter, restrt, n, h, b, pad_gr
 end
 
 
-function test_fgmres_avg(m_base, ratio, grid_name, max_iter, restrt, n, h, b, pad_green, number_of_repetitions)
+function test_fgmres_avg(m_base, ratio, grid_name, max_iter, restrt, n, h, b, pad_green, number_of_repetitions, m_0s_names, m_0s_methods)
     res = []
-    # m_0s_names = Dict(1 => "Average m", 2 => "Linear m",  3 => "Gaussian m",
-    # 4 => "Monte Carlo m", 5 => "Random without repetitions m", 6 => "Monte Carlo + Avarage m")
-    # m_0s_methods = [avg_m, linear_m, gaussian_range_m, monte_carlo_m, random_no_rep_m, combined_monte_carlo_avg]
-    m_0s_names = Dict(1 => "Monte Carlo m")
-    m_0s_methods = [monte_carlo_m]
     make_m_0s = (m_0_method, ratio) -> m_0_method(m_base, ratio, max_iter, restrt)
     for (i,method) in enumerate(m_0s_methods)
         num_of_iter, val, iter_arr = 0, 0, []
@@ -226,23 +221,29 @@ function test_fgmres_avg(m_base, ratio, grid_name, max_iter, restrt, n, h, b, pa
 end
 
 
-max_iter, restrt = 25, 25
+m_0s_names = Dict(1 => "Average m", 2 => "Linear m",  3 => "Gaussian Range m", 4 => "Gaussian Deprecated",
+5 => "Monte Carlo m", 6 => "Random without repetitions m", 7 => "Monte Carlo + Avarage m", 8 => "Min Max m")
+m_0s_methods = [avg_m, linear_m, gaussian_range_m, gaussian_depricated_m, monte_carlo_m, random_no_rep_m, combined_monte_carlo_avg, min_max_m]
+# m_0s_names = Dict(1 => "Average m", 2 => "Linear m",  3 => "Gaussian Range m", 4 => "Gaussian Deprecated")
+# m_0s_methods = [avg_m, linear_m, gaussian_range_m, gaussian_depricated_m]
+
+max_iter, restrt = 15, 20
 # q = rand(ComplexF64, n, n) # + 1im * rand(ComplexF64, n, n)      # Random initializaton.
 
-n_0 = 200
+n_0 = 256
 # rat = 0.1n_0
 n, h, m_base, b, pad_green = init_params(n_0)
-# triple_ratio = triple_grid_ratio(0.4,0.8,n)
-test_fgmres_avg(m_base, random_ratio, "random grid", max_iter, restrt, n, h, b, pad_green, 1)
+interpolated_split_ratio = interpolated_split_grid_ratio(0.5, 1, n)
+test_fgmres_avg(m_base, interpolated_split_ratio, "Interpolated Split grid", max_iter, restrt, n, h, b, pad_green, 3, m_0s_names, m_0s_methods)
 
-
-
-random_ratio = random_grid_ratio(n)
-# deltas_ratio = deltas_grid_ratio(Int(rat*rat), 100, 1, n)
-# dual_ratio = dual_grid_ratio(0.6, n)
-# delta_ratio = delta_grid_ratio(1000, n)
+split_ratio = split_grid_ratio(0.5, 1, n)
+# gaussian_ratio = gaussian_grid_ratio(1,0.2,n)
 # octa_ratio = octagon_grid_ratio(0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,n)
-# gaussian_ratio = gaussian_grid_ratio(5,2,n)
+# triple_ratio = triple_grid_ratio(0.5, 1, 1.5,n)
+# dual_ratio = dual_grid_ratio(0.5, 1, n)
+# random_ratio = random_grid_ratio(n)
+# deltas_ratio = deltas_grid_ratio(Int(rat*rat), 100, 1, n)
+# delta_ratio = delta_grid_ratio(1000, n)
 
 # m_0s_linear = linear_m(m_base, deltas_ratio, max_iter, restrt)
 # m_0s_avg = avg_m(m_base, dual_ratio, max_iter, restrt)
