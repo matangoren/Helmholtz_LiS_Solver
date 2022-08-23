@@ -237,6 +237,75 @@ interpolated_split_ratio = interpolated_split_grid_ratio(0.5, 1, n)
 test_fgmres_avg(m_base, interpolated_split_ratio, "Interpolated Split grid", max_iter, restrt, n, h, b, pad_green, 3, m_0s_names, m_0s_methods)
 
 split_ratio = split_grid_ratio(0.5, 1, n)
+
+
+
+
+
+
+
+# n, h, m_base, b, pad_green = init_params(200)
+# max_iter, restrt = 25, 25
+# q = rand(ComplexF64, n, n) # + 1im * rand(ComplexF64, n, n)      # Random initializaton.
+# heatmap(real.(q))
+# heatmap(imag.(q))
+
+# # Initialize all grids.
+# random_grid = random_grid_ratio(n)
+# heatmap(real.(random_grid))
+# dual_ratio = dual_grid_ratio(0.4, 0.6, n)
+# heatmap(real.(dual_ratio))
+# triple_ratio = triple_grid_ratio(1, 0.8, 0.2, n)
+# heatmap(real.(triple_ratio))
+# delta_ratio = delta_grid_ratio(1000, n)
+# heatmap(real.(delta_ratio))
+# deltas_ratio = deltas_grid_ratio(100, 1000, 1, n)
+# heatmap(real.(deltas_ratio))
+# octa_ratio = octagon_grid_ratio(0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,n)
+# heatmap(real.(octa_ratio))
+# gaussian_ratio = gaussian_grid_ratio(1,0.4,n)
+# heatmap(real.(gaussian_ratio))
+
+# # Try the different methods of picking m_0s along the calculation for the different grids.
+# ratios = [random_grid, dual_ratio, triple_ratio, delta_ratio, deltas_ratio, octa_ratio, gaussian_ratio]
+
+# function get_num_iterations_deprecated_gaussian(m_base, max_iter, restrt, deprecate)
+#     res = []
+#     for i in 1:size(ratios)[1]
+#         _, _, curr_m0s = gaussian_depricated_m(m_base, ratios[i], max_iter, restrt, deprecate)
+#         curr_y = fgmres_sequence(q, ratios[i], curr_m0s, n, h, m_base, b, pad_green, max_iter, restrt)
+#         push!(res, size(curr_y[5]))
+#     end
+#     return res
+# end
+# iters_deprecated_gaussian = get_num_iterations_deprecated_gaussian(m_base, max_iter, restrt, 0.01)
+# iters_deprecated_gaussian
+
+# function get_num_iterations_avg(m_base, max_iter, restrt)
+#     res = []
+#     for i in 1:size(ratios)[1]
+#         curr_m0s = avg_m(m_base, ratios[i], max_iter, restrt)
+#         curr_y = fgmres_sequence(q, ratios[i], curr_m0s, n, h, m_base, b, pad_green, max_iter, restrt)
+#         push!(res, size(curr_y[5]))
+#     end
+#     return res
+# end
+# iters_avg = get_num_iterations_avg(m_base, max_iter, restrt)
+# iters_avg
+
+# for i in 1:(size(iters_avg)[1]-1)
+#     if iters_deprecated_gaussian[i] != () && iters_avg != ()
+#         println(iters_deprecated_gaussian[i][1] - iters_avg[i][1])
+#     end
+# end
+
+
+
+
+
+
+
+
 # gaussian_ratio = gaussian_grid_ratio(1,0.2,n)
 # octa_ratio = octagon_grid_ratio(0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,n)
 # triple_ratio = triple_grid_ratio(0.5, 1, 1.5,n)
