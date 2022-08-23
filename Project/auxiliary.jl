@@ -9,8 +9,28 @@ intensity p2.
 """
 function dual_grid_ratio(p1, p2, n)
     ratios = ones(ComplexF64, n, n) .* p1
-    ratios[Int(n/4)+1: Int(3n/4), Int(n/4)+1:Int(3n/4)] = zeros(Int(n/2), Int(n/2)) .* p2
+    ratios[Int(n/4)+1: Int(3n/4), Int(n/4)+1:Int(3n/4)] = ones(Int(n/2), Int(n/2)) .* p2
     return ratios;
+end
+
+function split_grid_ratio(p1, p2, n)
+    ratios = ones(ComplexF64, n, n) .* p2
+    ratios[1: Int(n/2), :] .= p1
+    return ratios;
+end
+
+function interpolated_split_grid_ratio(p1, p2, n)
+    scale = div(n,4)+1              # scale need to be odd.
+    sc2 = div(scale , 2)            # sc2 need to be even.
+    ratios = ones(ComplexF64, n+scale-1, n+scale-1) .* p2
+    ratios[1:div(n+scale, 2), :] .= p1
+    kernel = ones(scale) / scale 
+    for i in sc2+1:n+sc2
+        for j in 1:n+scale-1
+            ratios[i,j] = sum(ratios[i-sc2:i+sc2,j] .* kernel)
+        end
+    end
+    return ratios[sc2+1:n+sc2,sc2+1:n+sc2];
 end
 
 """Generate a ratio-grid with 3 ratios: p1, p2 and p3."""
@@ -74,6 +94,7 @@ function deltas_grid_ratio(num, p1, p2, n)
     return reshape(ratios, n, n);
 end
 
+
 """Returns a grid with gaussian distribution."""
 function gaussian_grid_ratio(mu, sigma, n)
     d = Normal(mu, sigma)
@@ -134,7 +155,8 @@ end
 return a vector of length of max_iter * restrt,
 with an ordered range of ??.
 """
-function gaussian_range_m(m_base, ratio, max_iter, restrt, effective_sigma)
+function gaussian_range_m(m_base, ratio, max_iter, restrt)
+    effective_sigma = 0.05
     d = fit(Normal, real.(ratio[:]))
     lo, hi = quantile.(d, [0.5-effective_sigma, 0.5+effective_sigma])
     x = range(lo, hi; length = max_iter * restrt)
@@ -142,11 +164,12 @@ function gaussian_range_m(m_base, ratio, max_iter, restrt, effective_sigma)
     return m_base * x
 end
 
-function gaussian_depricated_m(m_base, ratio, max_iter, restrt, sigma_ratio=0.05)
+function gaussian_depricated_m(m_base, ratio, max_iter, restrt)
+    sigma_ratio = 0.05
     d = fit(Normal, real.(ratio[:]))
     sigma = std(d)
     new_d = Normal(mean(d), sigma*sigma_ratio)
-    return d, new_d, m_base .* rand(new_d, max_iter * restrt)
+    return m_base .* rand(new_d, max_iter * restrt)
 end
 
 # """
