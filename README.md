@@ -12,6 +12,20 @@ Helmholtz equation using GMRES (with varying preconditioner). We test a wide
 range of options for realistic grids for the wave number, for a range of grid sizes,
 using a robust and generic algorithm.
 
+## Helmholtz equation
+
+The equation we are dealing with looks as follow:
+
+![WhatsApp Image 2022-08-28 at 12 13 55](https://user-images.githubusercontent.com/73799544/187066734-39cde08d-0d8f-4bc0-921a-689f4dc548ef.jpeg)
+
+is a linear partial differential equation, which depicts waves and diffusion.
+
+## Setup
+
+We are using several patterns for the wave-number dependency.
+
+![WhatsApp Image 2022-08-28 at 11 57 46](https://user-images.githubusercontent.com/73799544/187066681-a1c20260-f2fb-4eca-ac79-b712c4910e18.jpeg)
+
 ## Algorithm
 
 ### Green's function
