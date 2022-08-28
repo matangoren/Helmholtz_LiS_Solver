@@ -15,7 +15,11 @@ using a robust and generic algorithm.
 ## Algorithm
 
 We use Green's function in order to find the solution for in-homogeneous Helmholtz equation.
-Consider the following Green's function:
+The Green's function (denoted as G), is the solution for the following equation:
+
+![WhatsApp Image 2022-08-28 at 12 04 31](https://user-images.githubusercontent.com/73799544/187066379-c0cf65a0-04ed-4221-8399-4ed27fb86187.jpeg)
+
+For the case of Helmholtz equation (L), Green's function looks as follow:
 
 ![WhatsApp Image 2022-08-28 at 11 59 15](https://user-images.githubusercontent.com/73799544/187066308-a53700d8-c95c-4a5f-a97a-4845b962e54f.jpeg)
 
