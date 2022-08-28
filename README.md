@@ -14,6 +14,8 @@ using a robust and generic algorithm.
 
 ## Algorithm
 
+### Green's function
+
 We use Green's function in order to find the solution for in-homogeneous Helmholtz equation.
 The Green's function (denoted as G), is the solution for the following equation:
 
@@ -23,6 +25,11 @@ For the case of Helmholtz equation (L), Green's function looks as follow:
 
 ![WhatsApp Image 2022-08-28 at 11 59 15](https://user-images.githubusercontent.com/73799544/187066308-a53700d8-c95c-4a5f-a97a-4845b962e54f.jpeg)
 
-Notice that it's the solution for the following equation:
+### Scheme
 
+For a given FGMRES iteraion, our algorithm conducts the following sequence:
+
+![WhatsApp Image 2022-08-28 at 12 07 37](https://user-images.githubusercontent.com/73799544/187066476-013f6c03-3b1d-484a-8161-39500f43cbaf.jpeg)
+
+where m_0 is the current wave number, K is the kernel we are using in order to create the Green's function and q is the right-hand-side (RHS) of the linear system Au=q.
 
