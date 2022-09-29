@@ -20,7 +20,7 @@ function split_grid_ratio(p1, p2, n)
 end
 
 function interpolated_split_grid_ratio(p1, p2, n)
-    scale = div(n,4)+1              # scale need to be odd.
+    scale = div(n,1)+1              # scale need to be odd.
     sc2 = div(scale , 2)            # sc2 need to be even.
     ratios = ones(ComplexF64, n+scale-1, n+scale-1) .* p2
     ratios[1:div(n+scale, 2), :] .= p1
@@ -153,7 +153,7 @@ end
 
 """
 return a vector of length of max_iter * restrt,
-with an ordered range of ??.
+with an ordered range.
 """
 function gaussian_range_m(m_base, ratio, max_iter, restrt)
     effective_sigma = 0.05
