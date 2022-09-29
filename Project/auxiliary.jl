@@ -172,17 +172,6 @@ function gaussian_depricated_m(m_base, ratio, max_iter, restrt)
     return m_base .* rand(new_d, max_iter * restrt)
 end
 
-# """
-# return a vector of length of max_iter * restrt,
-# where elements are randomly sampled from a gaussian calculated from the elements of the 
-# ratio-grid ratio.
-# """
-# function gaussian_m(m_base, ratio, max_iter, restrt)
-#     d = fit(Normal, real.(ratio[:]))
-#     samples = rand(d, max_iter * restrt)
-#     return m_base * samples
-# end
-
 """
 return a vector of length of max_iter * restrt,
 where elements are sampled from minimum value and maximum value of the 
