@@ -245,17 +245,3 @@ dual_ratio = dual_grid_ratio(0.5, 1, n)
 # m_0s_monte_carlo = monte_carlo_m(m_base, deltas_ratio, max_iter, restrt)
 # m_0s_minmax = min_max_m(m_base, dual_ratio, max_iter, restrt)
 # m_0s_rand_no_rep = random_rep_m(m_base, dual_ratio, max_iter, restrt)
-<<<<<<< HEAD
-# m_0s_rand_no_rep = random_no_rep_m(m_base, deltas_ratio, max_iter, restrt)
-=======
-# m_0s_rand_no_rep = random_no_rep_m(m_base, deltas_ratio, max_iter, restrt)
-
-# y = fgmres_sequence(q, dual_ratio, m_0s_avg, n, h, m_base, b, pad_green, max_iter, restrt)
-# size(y[5])
-# t2 = y[3]
-
-# test_fgmres(m_base, dual_ratio, "dual grid", max_iter, restrt, n, h, b, pad_green, q)
-
-# out = heatmap(real(octa_ratio))
-# save("Project\\figures\\octa grid ratio.png", out)
->>>>>>> 55847efd54b2c55c9fbd70a232e1c102be9d0175
