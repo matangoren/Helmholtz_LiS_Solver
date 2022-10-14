@@ -221,21 +221,7 @@ max_iter, restrt = 15, 20
 n_0 = 256
 # rat = 0.1n_0
 n, h, m_base, b, pad_green = init_params(n_0)
-interpolated_split_ratio = interpolated_split_grid_ratio(0.5, 1, n)
-test_fgmres_avg(m_base, interpolated_split_ratio, "Int Binary grid", max_iter, restrt, n, h, b, pad_green, 3, m_0s_names, m_0s_methods)
-
-triple_ratio = triple_grid_ratio(0.5, 0.75, 1,n)
-split_ratio = split_grid_ratio(0.5, 1, n)
-gaussian_ratio = gaussian_grid_ratio(1,0.2,n)
-octa_ratio = octagon_grid_ratio(0.3,0.4,0.5,0.6,0.7,0.8,0.9,1,n)
-dual_ratio = dual_grid_ratio(0.5, 1, n)
+wedge_ratio = wedge_grid_ratio(0.5, 1, n)
+test_fgmres_avg(m_base, wedge_ratio, "Wedge grid", max_iter, restrt, n, h, b, pad_green, 3, m_0s_names, m_0s_methods)
 
 
-# m_0s_linear = linear_m(m_base, deltas_ratio, max_iter, restrt)
-# m_0s_avg = avg_m(m_base, dual_ratio, max_iter, restrt)
-# m_0s_avg = avg_m(m_base, dual_ratio, max_iter, restrt)
-# m_0s_rand = random_min_max_m(m_base, deltas_ratio, max_iter, restrt)
-# m_0s_gaussian = gaussian_m(m_base, dual_ratio, max_iter, restrt)
-# m_0s_monte_carlo = monte_carlo_m(m_base, deltas_ratio, max_iter, restrt)
-# m_0s_minmax = min_max_m(m_base, dual_ratio, max_iter, restrt)
-# m_0s_rand_no_rep = random_rep_m(m_base, dual_ratio, max_iter, restrt)

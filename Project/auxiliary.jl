@@ -3,6 +3,25 @@ using Distributions
 using StatsBase
 
 # Grid ratio initialization
+
+# Original wedge model: p1=0.25, p2=1
+function wedge_grid_ratio(p1, p2, n); # no regular mesh
+    nx = n; ny = n;
+    x = (0:nx - 1) ./ (nx - 1);
+    y = (0:ny - 1) ./ (ny - 1);  
+    X = x * ones(Float64, nx)';
+    Y = ones(Float64,nx) * y';
+
+    Z = 0.25 .* (tanh.((4 .* Y - X .- 0.75) .* 20)) .+ 0.75; 
+    Z[:, end - div(ny, 2) + 1:end] = Z[:, div(ny, 2) : -1 : 1];
+    
+    ratios = Z .^ 2;
+    ratios = ratios .+ ((p2 - p1) / 2 - (1 - 0.25) / 2); # translation
+    ratios = ratios .* ((p2 - p1) / (1 - 0.25)); # stretch
+
+    return ratios;
+end
+
 """
 Return ratio-grid with two different intensities, such that the intensity p1 surrounds a n/2*n/2 sized square with 
 intensity p2.
