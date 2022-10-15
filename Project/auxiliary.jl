@@ -5,7 +5,7 @@ using StatsBase
 # Grid ratio initialization
 
 # Original wedge model: p1=0.25, p2=1
-function wedge_grid_ratio(p1, p2, n); # no regular mesh
+function wedge_grid_ratio(bottom, top, n); # no regular mesh
     nx = n; ny = n;
     x = (0:nx - 1) ./ (nx - 1);
     y = (0:ny - 1) ./ (ny - 1);  
@@ -16,8 +16,9 @@ function wedge_grid_ratio(p1, p2, n); # no regular mesh
     Z[:, end - div(ny, 2) + 1:end] = Z[:, div(ny, 2) : -1 : 1];
     
     ratios = Z .^ 2;
-    ratios = ratios .+ ((p2 - p1) / 2 - (1 - 0.25) / 2); # translation
-    ratios = ratios .* ((p2 - p1) / (1 - 0.25)); # stretch
+    ratios = ratios .* ((top - bottom) / (1 - 0.25)); # stretch
+	top_temp = top * ((top - bottom) / (1 - 0.25));
+	ratios = ratios .+ (top - top_temp); # translation
 
     return ratios;
 end
@@ -26,23 +27,23 @@ end
 Return ratio-grid with two different intensities, such that the intensity p1 surrounds a n/2*n/2 sized square with 
 intensity p2.
 """
-function dual_grid_ratio(p1, p2, n)
-    ratios = ones(ComplexF64, n, n) .* p1
-    ratios[Int(n/4)+1: Int(3n/4), Int(n/4)+1:Int(3n/4)] = ones(Int(n/2), Int(n/2)) .* p2
+function dual_grid_ratio(bottom, top, n)
+    ratios = ones(ComplexF64, n, n) .* bottom
+    ratios[Int(n/4)+1: Int(3n/4), Int(n/4)+1:Int(3n/4)] = ones(Int(n/2), Int(n/2)) .* top
     return ratios;
 end
 
-function split_grid_ratio(p1, p2, n)
-    ratios = ones(ComplexF64, n, n) .* p2
-    ratios[1: Int(n/2), :] .= p1
+function split_grid_ratio(bottom, top, n)
+    ratios = ones(ComplexF64, n, n) .* top
+    ratios[1: Int(n/2), :] .= bottom
     return ratios;
 end
 
-function interpolated_split_grid_ratio(p1, p2, n)
+function interpolated_split_grid_ratio(bottom, top, n)
     scale = div(n,1)+1              # scale need to be odd.
     sc2 = div(scale , 2)            # sc2 need to be even.
-    ratios = ones(ComplexF64, n+scale-1, n+scale-1) .* p2
-    ratios[1:div(n+scale, 2), :] .= p1
+    ratios = ones(ComplexF64, n+scale-1, n+scale-1) .* top
+    ratios[1:div(n+scale, 2), :] .= bottom
     kernel = ones(scale) / scale 
     for i in sc2+1:n+sc2
         for j in 1:n+scale-1
@@ -53,10 +54,10 @@ function interpolated_split_grid_ratio(p1, p2, n)
 end
 
 """Generate a ratio-grid with 3 ratios: p1, p2 and p3."""
-function triple_grid_ratio(p1, p2, p3, n)
-    ratios = ones(ComplexF64, n, n) .* p1
-    ratios[div(2n,12)+1: div(10n,12), div(2n,12)+1:div(10n,12)] .= p2 
-    ratios[div(5n,12)+1: div(7n,12), div(5n,12)+1:div(7n,12)] .= p3
+function triple_grid_ratio(bottom, middle, top, n)
+    ratios = ones(ComplexF64, n, n) .* bottom
+    ratios[div(2n,12)+1: div(10n,12), div(2n,12)+1:div(10n,12)] .= middle 
+    ratios[div(5n,12)+1: div(7n,12), div(5n,12)+1:div(7n,12)] .= top
     return ratios;
 end
 

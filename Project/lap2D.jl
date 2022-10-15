@@ -209,11 +209,11 @@ function test_fgmres_avg(m_base, ratio, grid_name, max_iter, restrt, n, h, b, pa
 end
 
 
-m_0s_names = Dict(1 => "Average m", 2 => "Linear m",  3 => "Gaussian Range m", 4 => "Gaussian Deprecated",
-5 => "Monte Carlo m", 6 => "Monte Carlo + Avarage m", 7 => "Min Max m")
-m_0s_methods = [avg_m, linear_m, gaussian_range_m, gaussian_depricated_m, monte_carlo_m, combined_monte_carlo_avg, min_max_m]
-# m_0s_names = Dict(1 => "Average m", 2 => "Linear m",  3 => "Gaussian Range m", 4 => "Gaussian Deprecated")
-# m_0s_methods = [avg_m, linear_m, gaussian_range_m, gaussian_depricated_m]
+# m_0s_names = Dict(1 => "Average m", 2 => "Linear m",  3 => "Gaussian Range m", 4 => "Gaussian Deprecated",
+# 5 => "Monte Carlo m", 6 => "Monte Carlo + Avarage m", 7 => "Min Max m")
+# m_0s_methods = [avg_m, linear_m, gaussian_range_m, gaussian_depricated_m, monte_carlo_m, combined_monte_carlo_avg, min_max_m]
+m_0s_names = Dict(1 => "Average m", 2 => "Min Max m")
+m_0s_methods = [avg_m, min_max_m]
 
 max_iter, restrt = 15, 20
 # q = rand(ComplexF64, n, n) # + 1im * rand(ComplexF64, n, n)      # Random initializaton.
@@ -221,7 +221,7 @@ max_iter, restrt = 15, 20
 n_0 = 256
 # rat = 0.1n_0
 n, h, m_base, b, pad_green = init_params(n_0)
-wedge_ratio = wedge_grid_ratio(0.5, 1, n)
-test_fgmres_avg(m_base, wedge_ratio, "Wedge grid", max_iter, restrt, n, h, b, pad_green, 3, m_0s_names, m_0s_methods)
+wedge_ratio = wedge_grid_ratio(0.75, 1, n)
+test_fgmres_avg(m_base, wedge_ratio, "Wedge grid", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
 
 
