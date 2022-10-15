@@ -4,7 +4,6 @@ using StatsBase
 
 # Grid ratio initialization
 
-# Original wedge model: p1=0.25, p2=1
 function wedge_grid_ratio(bottom, top, n); # no regular mesh
     nx = n; ny = n;
     x = (0:nx - 1) ./ (nx - 1);
@@ -16,11 +15,37 @@ function wedge_grid_ratio(bottom, top, n); # no regular mesh
     Z[:, end - div(ny, 2) + 1:end] = Z[:, div(ny, 2) : -1 : 1];
     
     ratios = Z .^ 2;
+
+    # Original wedge model: bottom=0.25, top=1.
+    # We want to strech and move the range of values
+    # to get a wedge model with any wanted range
     ratios = ratios .* ((top - bottom) / (1 - 0.25)); # stretch
 	top_temp = top * ((top - bottom) / (1 - 0.25));
 	ratios = ratios .+ (top - top_temp); # translation
 
     return ratios;
+end
+
+function linear_grid_ratio(bottom, top, n)
+    nx = n; ny = n;
+		# ratios2 = linspace(top,bottom,ny);
+		# ratios1 = ones(Float64,nx);
+		# ratios = ratios1*ratios2'
+    x = (0:nx - 1) ./ (nx - 1);
+    y = (0:ny - 1) ./ (ny - 1);  
+    X = x * ones(Float64, nx)';
+    Y = ones(Float64,nx) * y';    
+    # ratios = X;
+    ratios = Y;
+
+    # Original linear model: bottom=0, top=1.
+    # We want to strech and move the range of values
+    # to get a linear model with any wanted range
+    ratios = ratios .* (top - bottom); # stretch
+	top_temp = top * (top - bottom);
+	ratios = ratios .+ (top - top_temp); # translation
+
+	return ratios;
 end
 
 """
