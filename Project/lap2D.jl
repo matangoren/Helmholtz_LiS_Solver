@@ -7,6 +7,7 @@ using Images, FileIO
 using KrylovMethods
 using Printf
 include("auxiliary.jl");
+include("subdomains.jl");
 
 # Random.seed!(1234);
 
@@ -212,16 +213,47 @@ end
 # m_0s_names = Dict(1 => "Average m", 2 => "Linear m",  3 => "Gaussian Range m", 4 => "Gaussian Deprecated",
 # 5 => "Monte Carlo m", 6 => "Monte Carlo + Avarage m", 7 => "Min Max m")
 # m_0s_methods = [avg_m, linear_m, gaussian_range_m, gaussian_depricated_m, monte_carlo_m, combined_monte_carlo_avg, min_max_m]
-m_0s_names = Dict(1 => "Average m", 2 => "Min Max m", 3 => "Linear m")
-m_0s_methods = [avg_m, min_max_m, linear_m]
+m_0s_names = Dict(1 => "Average m", 2 => "Min Max m", 3 => "Monte Carlo m");
+m_0s_methods = [avg_m, min_max_m, monte_carlo_m];
 
-max_iter, restrt = 15, 20
+max_iter, restrt = 15, 20;
 # q = rand(ComplexF64, n, n) # + 1im * rand(ComplexF64, n, n)      # Random initializaton.
 
-n_0 = 256
+n_0 = 64;
 # rat = 0.1n_0
-n, h, m_base, b, pad_green = init_params(n_0)
-linear_ratio = linear_grid_ratio(0.5, 1, n)
+n, h, m_base, b, pad_green = init_params(n_0);
+linear_ratio = linear_grid_ratio(0.25, 1, n)
 test_fgmres_avg(m_base, linear_ratio, "Linear grid", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
+
+# 9 subdomains wedge experiment
+# wedge11, wedge12, wedge13, wedge21, wedge22, wedge23, wedge31, wedge32, wedge33 = wedge_9_subdomains(0.25, 1, n);
+# test_fgmres_avg(m_base, wedge11, "Wedge grid - patch [1,1]", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
+# test_fgmres_avg(m_base, wedge12, "Wedge grid - patch [1,2]", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
+# test_fgmres_avg(m_base, wedge13, "Wedge grid - patch [1,3]", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
+# test_fgmres_avg(m_base, wedge21, "Wedge grid - patch [2,1]", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
+# test_fgmres_avg(m_base, wedge22, "Wedge grid - patch [2,2]", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
+# test_fgmres_avg(m_base, wedge23, "Wedge grid - patch [2,3]", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
+# test_fgmres_avg(m_base, wedge31, "Wedge grid - patch [3,1]", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
+# test_fgmres_avg(m_base, wedge32, "Wedge grid - patch [3,2]", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
+# test_fgmres_avg(m_base, wedge33, "Wedge grid - patch [3,3]", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
+
+# 16 subdomains wedge experiment
+# wedge11, wedge12, wedge13, wedge14, wedge21, wedge22, wedge23, wedge24, wedge31, wedge32, wedge33, wedge34, wedge41, wedge42, wedge43, wedge44 = wedge_16_subdomains(0.25, 1, n);
+# test_fgmres_avg(m_base, wedge11, "Wedge grid - patch [1,1]", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
+# test_fgmres_avg(m_base, wedge12, "Wedge grid - patch [1,2]", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
+# test_fgmres_avg(m_base, wedge13, "Wedge grid - patch [1,3]", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
+# test_fgmres_avg(m_base, wedge14, "Wedge grid - patch [1,4]", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
+# test_fgmres_avg(m_base, wedge21, "Wedge grid - patch [2,1]", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
+# test_fgmres_avg(m_base, wedge22, "Wedge grid - patch [2,2]", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
+# test_fgmres_avg(m_base, wedge23, "Wedge grid - patch [2,3]", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
+# test_fgmres_avg(m_base, wedge24, "Wedge grid - patch [2,4]", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
+# test_fgmres_avg(m_base, wedge31, "Wedge grid - patch [3,1]", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
+# test_fgmres_avg(m_base, wedge32, "Wedge grid - patch [3,2]", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
+# test_fgmres_avg(m_base, wedge33, "Wedge grid - patch [3,3]", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
+# test_fgmres_avg(m_base, wedge34, "Wedge grid - patch [3,4]", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
+# test_fgmres_avg(m_base, wedge41, "Wedge grid - patch [4,1]", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
+# test_fgmres_avg(m_base, wedge42, "Wedge grid - patch [4,2]", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
+# test_fgmres_avg(m_base, wedge43, "Wedge grid - patch [4,3]", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
+# test_fgmres_avg(m_base, wedge44, "Wedge grid - patch [4,4]", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
 
 
