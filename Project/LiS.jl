@@ -65,7 +65,7 @@ n = 200;
 h = 2.0/n;
 m = (0.1/(h^2))*(1.0 + 1im*0.01)          # m is more or less k^2. In this case it is constant through space (x).
 hop = [-1 2 -1]/(h^2) - [0 m 0];
-b = zeros(ComplexF64, n, n);
+b = zeros(ComplexF64, n, 1);
 b[div(n,2)] = 1.0;
 u2 = solveConstHelmNLA(hop,n,b,m::ComplexF64)
 
