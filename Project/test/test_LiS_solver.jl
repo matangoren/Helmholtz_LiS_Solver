@@ -8,7 +8,7 @@ include("../LiS/utils.jl")
 
 
 initial_n = [64, 64]
-kappa_coeff = [[0.5,0.7],[0.2,0.4], [0.9], [0.25,1.0], [0.5, 1.0], [0.75,1.0]]
+m_coeff = [[0.5,0.7],[0.2,0.4], [0.9], [0.25,1.0], [0.5, 1.0], [0.75,1.0]]
 
 
 # FGMRES iterations
@@ -21,7 +21,7 @@ for i=3:3
     n = 2^(i-1) .* initial_n .+ 1
     h = 1 ./ n
     println("===== testing for $(n[1])x$(n[2]) grid =====")
-    for c in kappa_coeff[1:1]
+    for c in m_coeff[3:3]
         t = c[1]
         lower = upper = 1.0
         if length(c) == 2
@@ -45,12 +45,12 @@ for i=3:3
         # m_0 = average model
         gamma_0 = (maximum(m) - minimum(m)) < 0.1 ? (mean(m) < 0.5 ? mean(m) : 1-mean(m)) : (maximum(m) - minimum(m))./maximum(m)
         println("\t gamma_0 = $(gamma_0)")
-        m_0 = (omega^2)*mean(m)*(1-im*gamma_0)
+        m_0 = (omega^2)*mean(m)*(1-im*0.05)
         
         solver = getLiS_solver(n, h, δ, m_0, n)
         x, iterations, error = solve(solver, n, b, h, m, gamma, omega, restart, max_iter);
-        figure()
-        imshow(reshape(real(x), n...)); colorbar();
+        # figure()
+        # imshow(reshape(real(x), n...)); colorbar();
         # append!(v, [x])
 
         println("\t iterations = $(iterations) with error=$(error)\n")

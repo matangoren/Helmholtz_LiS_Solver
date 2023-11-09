@@ -22,20 +22,10 @@ function getFFTGreensFunction(n::Vector{Int64}, h::Vector{Float64}, m_0::Complex
     g = g[div(n[1],2):div(n[1],2)+2*n[1]-1,div(n[2],2):div(n[2],2)+2*n[2]-1] # crop
     # g = g[Int(n[1]/2):Int(5n[1]/2)-1,Int(n[2]/2):Int(5n[2]/2)-1] # crop
     
+    g = fftshift(g) # check fftshift!(g) instead
 
     # figure()
-    # imshow(real(g)); colorbar();
-    # savefig("my_green.png")
-    # close()
-    g = fftshift(g)
-    # figure()
-    # imshow(real(fft(g))); colorbar();
-    # savefig("my_green_after_shift_and_fft_real.png")
-    # close()
-    # figure()
-    # imshow(imag(fft(g))); colorbar();
-    # savefig("my_green_after_shift_and_fft_imag.png")
-    # close()
+    # imshow(real(fft(g)))
 
     return fft(g)
 end

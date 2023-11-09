@@ -16,8 +16,8 @@ In = (n::Int64)->(return spdiagm(0=>ones(ComplexF64, n)));
 
 function init_params(n)
     n = n;
-    h = 1.0/n;
-    m_base = (0.2*pi/(h))^2*(1.0 + 1im*0.05)         # m = k^2. In this case it is constant through space (x).
+    h = 2.0/n;
+    m_base = (0.1/(h^2))*(1.0 + 1im*0.05)         # m = k^2. In this case it is constant through space (x).
 
     # Define a point-source in the middle of the grid.
     b = zeros(ComplexF64, n, n);
@@ -229,7 +229,7 @@ max_iter, restrt = 40, 20;
 n_0 = 256;
 # rat = 0.1n_0
 n, h, m_base, b, pad_green = init_params(n_0);
-linear_ratio = linear_grid_ratio(0.75, 1.0, n)
+linear_ratio = 0.1*linear_grid_ratio(1.0, 1.0, n)
 test_fgmres_avg(m_base, linear_ratio, "Linear grid", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
 
 # 9 subdomains wedge experiment
