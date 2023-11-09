@@ -1,5 +1,5 @@
 using PyPlot
-using Plots
+# using Plots
 using FFTW
 using SparseArrays
 using LinearAlgebra
@@ -76,7 +76,7 @@ u1 = solveConstHelm(hop,n,b,m);
 plot(real(u1))
 show()
 
-figure()
-plot(abs.(u1-u2))
-show()
+# figure()
+# plot(abs.(u1-u2))
+# show()
 

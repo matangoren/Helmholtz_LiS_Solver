@@ -1,9 +1,9 @@
-# using PyPlot
-using Plots
+using PyPlot
+# using Plots
 using FFTW
 using SparseArrays
 using LinearAlgebra
-using Images, FileIO
+# using Images, FileIO
 using KrylovMethods
 using Printf
 include("auxiliary.jl");
@@ -16,8 +16,8 @@ In = (n::Int64)->(return spdiagm(0=>ones(ComplexF64, n)));
 
 function init_params(n)
     n = n;
-    h = 2.0/n;
-    m_base = (0.1/(h^2))*(1.0 + 1im*0.05)         # m = k^2. In this case it is constant through space (x).
+    h = 1.0/n;
+    m_base = (0.2*pi/(h))^2*(1.0 + 1im*0.05)         # m = k^2. In this case it is constant through space (x).
 
     # Define a point-source in the middle of the grid.
     b = zeros(ComplexF64, n, n);
@@ -168,7 +168,10 @@ function fgmres_sequence(q, ratios, m_0s, n, h, m_base, b, pad_green, max_iter=1
     M = q -> M_gen(q, n, h, m_g, b, pad_green)
     # test printing and behaviour for early stopping
     try
-        xtt = fgmres(A_func, q[:], restrt, tol=tol, maxIter=max_iter, M=M, out=2, storeInterm=true, flexible=true)
+        xtt = fgmres(A_func, q[:], restrt, tol=tol, maxIter=max_iter, M=M, out=2, storeInterm=false, flexible=true)
+        figure()
+        imshow(reshape(real(xtt[1]),n,n))
+
         return xtt
     catch e
         println("Probably reached the maximal number of iterations without converging!")
@@ -191,6 +194,8 @@ function test_fgmres_avg(m_base, ratio, grid_name, max_iter, restrt, n, h, b, pa
             println("Method: ", m_0s_names[i], ",   Iteration Number: ", j)
             # Each time we generate a different source.
             q = rand(ComplexF64, n, n)
+            q = zeros(ComplexF64, n, n)
+            q[div(n,2),div(n,2)]=1.0
             # Creating an array of m_0s for a specific method. 
             m_0s = make_m_0s(method, ratio)
             # Excute fgmres sequence.
@@ -213,16 +218,18 @@ end
 # m_0s_names = Dict(1 => "Average m", 2 => "Linear m",  3 => "Gaussian Range m", 4 => "Gaussian Deprecated",
 # 5 => "Monte Carlo m", 6 => "Monte Carlo + Avarage m", 7 => "Min Max m")
 # m_0s_methods = [avg_m, linear_m, gaussian_range_m, gaussian_depricated_m, monte_carlo_m, combined_monte_carlo_avg, min_max_m]
-m_0s_names = Dict(1 => "Average m", 2 => "Min Max m", 3 => "Monte Carlo m");
-m_0s_methods = [avg_m, min_max_m, monte_carlo_m];
+# m_0s_names = Dict(1 => "Average m", 2 => "Min Max m", 3 => "Monte Carlo m");
+# m_0s_methods = [avg_m, min_max_m, monte_carlo_m];
+m_0s_names = Dict(1 => "Average m");
+m_0s_methods = [avg_m];
 
-max_iter, restrt = 15, 20;
+max_iter, restrt = 40, 20;
 # q = rand(ComplexF64, n, n) # + 1im * rand(ComplexF64, n, n)      # Random initializaton.
 
-n_0 = 64;
+n_0 = 256;
 # rat = 0.1n_0
 n, h, m_base, b, pad_green = init_params(n_0);
-linear_ratio = linear_grid_ratio(0.25, 1, n)
+linear_ratio = linear_grid_ratio(0.75, 1.0, n)
 test_fgmres_avg(m_base, linear_ratio, "Linear grid", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
 
 # 9 subdomains wedge experiment
@@ -255,5 +262,4 @@ test_fgmres_avg(m_base, linear_ratio, "Linear grid", max_iter, restrt, n, h, b, 
 # test_fgmres_avg(m_base, wedge42, "Wedge grid - patch [4,2]", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
 # test_fgmres_avg(m_base, wedge43, "Wedge grid - patch [4,3]", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
 # test_fgmres_avg(m_base, wedge44, "Wedge grid - patch [4,4]", max_iter, restrt, n, h, b, pad_green, 1, m_0s_names, m_0s_methods)
-
 
