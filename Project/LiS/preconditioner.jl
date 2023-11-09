@@ -19,7 +19,10 @@ function getFFTGreensFunction(n::Vector{Int64}, h::Vector{Float64}, m_0::Complex
     q_padded[pad[1]+1:pad[1]+n[1],pad[2]+1:pad[2]+n[2]] .= q
 
     g = ifft(fft(q_padded) ./ fft(kernal_op))
-    g = g[Int(n[1]/2):Int(5n[1]/2)-1,Int(n[2]/2):Int(5n[2]/2)-1] # crop
+    g = g[div(n[1],2):div(n[1],2)+2*n[1]-1,div(n[2],2):div(n[2],2)+2*n[2]-1] # crop
+    # g = g[Int(n[1]/2):Int(5n[1]/2)-1,Int(n[2]/2):Int(5n[2]/2)-1] # crop
+    
+
     # figure()
     # imshow(real(g)); colorbar();
     # savefig("my_green.png")
@@ -66,8 +69,8 @@ end
 function LiS_solve(solver::LiS_solver, r)
     n = solver.n
     r_padded = zeros(ComplexF64,(2 .* n)...)
-    r_padded[Int(n[1]/2)+1:Int(3n[1]/2),Int(n[2]/2)+1:Int(3n[2]/2)] .= r
+    r_padded[div(n[1],2)+1:div(n[1],2)+n[1],div(n[2],2)+1:div(n[2],2)+n[2]] .= r
 
     e = ifft(solver.Fg_inv .* fft(r_padded))
-    return e[Int(n[1]/2)+1:Int(3n[1]/2),Int(n[2]/2)+1:Int(3n[2]/2)]
+    return e[div(n[1],2)+1:div(n[1],2)+n[1],div(n[2],2)+1:div(n[2],2)+n[2]]
 end

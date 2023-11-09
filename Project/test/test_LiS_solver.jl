@@ -18,10 +18,10 @@ restart = 20
 # global v = []
 
 for i=3:3
-    n = 2^(i-1) .* initial_n
+    n = 2^(i-1) .* initial_n .+ 1
     h = 1 ./ n
     println("===== testing for $(n[1])x$(n[2]) grid =====")
-    for c in kappa_coeff
+    for c in kappa_coeff[1:1]
         t = c[1]
         lower = upper = 1.0
         if length(c) == 2
