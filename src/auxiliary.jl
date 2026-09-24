@@ -1,7 +1,7 @@
 using Random
 using Distributions
 using StatsBase
-
+using Printf
 using Distributions
 
 function getUniformM0s(lower, upper; num=4)
@@ -33,12 +33,15 @@ function wedge_grid_ratio(bottom, top, n); # no regular mesh
     return ratios';
 end
 
-function linear_grid_ratio(bottom, top, n)
-    x = (0:n - 1) ./ (n - 1);
-    x = x .* (top - bottom) .+ bottom; 
-    ratios = x * ones(Float64, n)'; 
+function linear_grid_ratio(bottom, top, n; data_type=Float64)
+    # x = (0:n - 1) ./ (n - 1);
+    # x = x .* (top - bottom) .+ bottom; 
+    # ratios = x * ones(Float64, n)'; 
 
-	return ratios;
+    rho2 = collect(data_type,range(bottom,stop=top,length=n[1]));
+	rho1 = ones(data_type, n[2]);
+	rho = rho1*rho2'
+	return permutedims(rho);
 end
 
 """
